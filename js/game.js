@@ -341,8 +341,8 @@ var ColumnsGame = new Class({
 	},
 
 	blockSpeed: function() {
-		var maxSpeed = 5.0;
-		return (0.5 + this.level * 0.5).limit(1.0, maxSpeed);
+		var maxSpeed = 4.0;
+		return (0.5 + this.level * 0.25).limit(1.0, maxSpeed);
 	},
 
 	// moves the falling block into the grid to be redered normally
@@ -596,8 +596,8 @@ var FallingBlock = new Class({
 		this.grid.each(function(colorCode, i) {
 			context.fillStyle = ColumnColors[colorCode];
 			context.strokeStyle = '#333';
-			context.fillRect(this.x.floor(), (this.y + i * this.squareSize).floor(), this.squareSize, this.squareSize);
-			context.strokeRect(this.x.floor(), (this.y + i * this.squareSize).floor(), this.squareSize, this.squareSize);
+			context.fillRect(this.x, (this.y + i * this.squareSize), this.squareSize, this.squareSize);
+			context.strokeRect(this.x, (this.y + i * this.squareSize), this.squareSize, this.squareSize);
 		}.bind(this));
 	},
 
