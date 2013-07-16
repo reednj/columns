@@ -491,6 +491,15 @@ var ColumnsGame = new Class({
 	}
 });
 
+// FadeBlock
+//
+// A gridsquare that changes color and fades out. These are used for effect
+// when the player gets 3 blocks and a row, and we need to make those blocks
+// disappear.
+//
+// This is some old code, it could probably take some tips from the way things
+// are done with CanvasText
+//
 var FadeBlock = new Class({
 	initialize: function(options) {
 		this.options = options || {};
@@ -530,6 +539,14 @@ var FadeBlock = new Class({
 	}
 });
 
+// BlockPreview
+//
+// Using the normal fallingblock class with a zero velocity to render the next block
+// in a smaller grid next to the main one.
+//
+// The block is not automatically created and displayed when the object is created
+// you must explicited call renewBlock()
+//
 var BlockPreview = new Class({
 	initialize: function(options) {
 		this.options = options || {};

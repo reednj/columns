@@ -1,4 +1,34 @@
 
+// CanvasHelper
+//
+// Helper class to handle html5 cavnases and render subobjects in an
+// easy way
+//
+// It can be run in one of two modes - with autoRedraw or not turned on. With autoRedraw
+// the canvas will be redraw as often as possible, using requestAnimationFrame (which aims
+// for about 60fps). With it off, the parent will need to call refresh() manually to redraw
+// the canvas.
+//
+// Everytime the canvas is redraw, the render(context, canvas) method is called for every
+// object in the render queue. Add objects to the queue using the startRendering(o) method
+// The only thing is object is required to have is a render method to paint its self to the
+// canvas.
+//
+// The redraw loop has to be explicitly started with start when the helper is created
+//
+// Options:
+//    - autoRedraw (bool) 		- when true the next frame will be requested immediately after the previous
+//    - onRedraw (event fn())	- this event is triggered after the frame is cleared, but before the draw
+//
+// Example:
+//		var helper = new CanvasHelper('canvas-id', {autoRedraw: true});
+//
+//		// squareThing.render(context, canvas) gets called at each frame
+//		helper.startRendering(squareThing);
+//
+//		// starts the draw loop.
+//		helper.start();
+//
 var CanvasHelper = new Class({
 	initialize: function(element, options) {
 		this.element = $(element);
@@ -95,6 +125,13 @@ var CanvasHelper = new Class({
 	}
 });
 
+// CavnasText - helper class for rendering text with animations.
+//
+// The main thing this class provides is methods to animate the text
+// pulsating it in and out, or fading the text. When calling fade, the
+// text is automatically removed from the rendering queue when it
+// disappears
+//
 var CanvasText = new Class({
 	initialize: function(options) {
 		this.options = options;
@@ -192,6 +229,22 @@ var CanvasText = new Class({
 	}
 });
 
+// Moveable - base class for objects that move across the canvas
+//
+//
+// This is a base class, when extending it you must implement the 'render' method
+// so it knows how to draw itself.
+//
+// A Moveable has a position and a velocity. Everytime move() or update() is called
+// the location is updated according to the velocity. It also contains a number of
+// other methods for calculating the objets speed and distance from other objects etc
+//
+// Options:
+//	x (number)	- x coord
+//	y (number)	- y coord
+//	xv (number)	- x velocity. This gets added to the location with every update()
+//	yv (number)	- y velocity. This gets added to the location with every update()
+//
 var Moveable = new Class({
   	initialize: function(options) {
 		this.options = options || {};
