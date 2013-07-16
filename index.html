@@ -1,0 +1,85 @@
+<!doctype html>
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name='viewport' content='width=device-width' />
+	<title>Columns - Line up 3 blocks of the same color to get points</title>
+
+	<link rel="stylesheet" href="./css/normalize.css" type="text/css">
+	<link rel="stylesheet" href="./css/main.less" type="text/x-less">
+
+	<script src="js/mootools-core-full-compat-yc.js"></script>
+	<script src="js/canvas.js"></script>
+	<script src="js/game.js"></script>
+
+	<script type='text/javascript'>
+		var Ui = {
+			initialize: function() {
+				this.game = new ColumnsGame();
+			},
+
+			stop: function() {
+				this.game.stop();
+			},
+
+			start: function() {
+				this.game.start();
+			}
+		}
+
+		window.addEvent('load', Ui.initialize.bind(Ui));
+
+	</script>
+
+	<script src="js/less.min.js"></script>
+</head>
+
+<body>
+
+<div id='wrapper'>
+	<div class='game'>
+
+		<div class='viewport'>
+			<canvas id='back-canvas' width='220' height='400'></canvas>
+			<canvas id='main-canvas' width='220' height='400'></canvas>
+		</div>
+
+		<div class='prev-viewport'>
+			<div class='top-row'>
+				<canvas id='preview-canvas' width='60' height='100'></canvas>
+
+				<div class='score'>
+					<div id='level' class='level'>-</div>
+					<div id='points'>0</div>
+					<div class='caption'>points</div>
+				</div>
+
+				<div style='clear:both;'></div>
+			</div>
+
+			<div class='help'>
+				<h2>COLUMNS</h2>
+				<div>Line up 3 squares of the same color to get points</div>
+
+				<h2>KEYS</h2>
+				<div><i>left/right</i> move</div>
+				<div><i>up/down</i> rotate</div>
+				<div><i>space</i> drop quickly</div>
+			</div>
+		</div>
+	</div>
+
+	<div id='push'></div>
+</div>
+
+<div id='footer'>
+	<div class='content'>
+		<div>Nathan Reed</div>
+		<div><a href='http://twitter.com/reednj'>@reednj</a></div>
+	</div>
+</div>
+
+</body>
+
+</html>
