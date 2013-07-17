@@ -347,6 +347,23 @@ var GameGrid = new Class({
 		}
 	},
 
+	getRow: function(row) {
+		return this.grid[row];
+	},
+
+	getColumn: function(col) {
+		var result = null;
+
+		if(col < this.gridWidth) {
+			result = [];
+			for(var i=0; i < this.grid.length; i++) {
+				result.push(this.grid[i][col]);
+			}
+		}
+
+		return result;
+	},
+
 	// moves the falling block into the grid to be redered normally
 	moveToGrid: function(fallingBlock) {
 		var gx = (fallingBlock.x / this.squareSize).floor();
@@ -366,104 +383,65 @@ var GameGrid = new Class({
 	// this function gets the list of squares of the same color that are lined up
 	// and returns them. They are then eliminated from the grid, and we run the
 	// process again, until there are no more left.
+	//
+	// the way we do this here is actually pretty inefficient, because we need to
+	// convert each column into an array each time we check. But it is fast enough
+	// and the code is much easier to understand than the alternative.
 	getRuns: function() {
-
 		var runList = [];
 
-		var direction = 'across';
-		for(var gy=0; gy < this.gridHeight; gy++) {
-
-			var runLength = 0;
-			var state = 'out';
-
-
-			for(var gx=0; gx < this.gridWidth; gx++) {
-				var curBlock = this.grid[gy][gx];
-
-				// nextblock will be undef when we get to the end of the row
-				// this is what we want, cause it will cause the current run
-				// to get terminated
-				var nextBlock = this.grid[gy][gx+1];
-
-				if(curBlock == 0) {
-					state = 'out';
-					continue;
-				}
-
-				if(state == 'out') {
-					if(curBlock == nextBlock) {
-						runLength = 2;
-						state = 'in';
-					}
-				} else if(state == 'in') {
-					if(curBlock == nextBlock) {
-						runLength++;
-					} else {
-						if(runLength >= 3) {
-							runList.push(this.addRun(gx, gy, runLength, direction));
-						}
-
-						runLength = 0;
-						state = 'out'
-					}
-				}
-			}
+		for(var row=0; row < this.gridHeight; row++) {
+			var runs = this.getRunsForArray(this.getRow(row)).map(function(r) { return {x:r, y:row }; });
+			runList.append(runs);
 		}
 
-		var direction = 'up';
-		for(var gx=0; gx < this.gridWidth; gx++) {
-
-			runLength = 0;
-			state = 'out';
-
-			for(var gy=0; gy < this.gridHeight; gy++) {
-				var curBlock = this.grid[gy][gx];
-
-				// nextblock will be undef when we get to the end of the row
-				// this is what we want, cause it will cause the current run
-				// to get terminated
-				var nextBlock = (this.grid[gy + 1])?this.grid[gy + 1][gx] : null;
-
-				if(curBlock == 0) {
-					state = 'out';
-					continue;
-				}
-
-				if(state == 'out') {
-					if(curBlock == nextBlock) {
-						runLength = 2;
-						state = 'in';
-					}
-				} else if(state == 'in') {
-					if(curBlock == nextBlock) {
-						runLength++;
-					} else {
-						if(runLength >= 3) {
-							runList.push(this.addRun(gx, gy, runLength, direction));
-						}
-
-						runLength = 0;
-						state = 'out'
-					}
-				}
-			}
+		for(var col=0; col < this.gridWidth; col++) {
+			var runs = this.getRunsForArray(this.getColumn(col)).map(function(r) { return {x: col, y:r }; });
+			runList.append(runs);
 		}
 
-		return runList.flatten();
+		return runList;
 	},
 
-	addRun: function(endX, endY, runLength, direction) {
+	// given an array, returns a list of indexes that form runs (ie consuctive items with the same value)
+	// greater in length that minLength. Anything with the value 'ignore' doesn't count when getting the
+	// runs.
+	getRunsForArray: function(data) {
+		var ignore = 0;
+		var minLength = 3;
+		var runArray = null;
 		var result = [];
-		for(var i=0; i < runLength; i++) {
-			if(direction == 'across') {
-				result.push({x: endX - i, y:endY });
-			} else {
-				result.push({x: endX, y:endY - i });
+
+		for(var i=0; i < data.length; i++) {
+			var current = data[i];
+			var next = data[i+1];
+
+			if(current == ignore) {
+				continue;
+			}
+
+			if(current == next) {
+				if(!runArray) {
+					runArray = [i, i+1];
+				} else {
+					runArray.push(i+1);
+				}
+			} else if(current != next) {
+				if(runArray) {
+					// we are the the end of a run. If it is above the min length
+					// then add it to the list
+					if(runArray.length >= minLength) {
+						result.append(runArray);
+					}
+					runArray = null;
+				}
 			}
 		}
+
 		return result;
 	},
-		// collspases the grid veritcally, after blocks with something above them have been
+
+	// collspases the grid veritcally, after blocks with something above them have been
 	// zeroed out. No animation at this stage
 	collapseGrid: function() {
 		var hasChanged = false;
