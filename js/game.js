@@ -22,27 +22,9 @@ var ColumnsGame = new Class({
 
 		this.resetBoard();
 
-		this.titleText = new CanvasText({
-			text: 'press space to start',
-			color: '#ccc',
-			font: 'bold 16pt Arial',
-			x: this.canvas.width / 2,
-			y: this.canvas.height / 2.5
-		});
-
-		this.subtitleText = new CanvasText({
-			text: 'press space to restart',
-			color: '#ccc',
-			font: '12pt Arial',
-			x: this.canvas.width / 2,
-			y: this.canvas.height / 2.5 + 20
-		});
-
-		this.titleText.pulse();
-
+		this.initText();
 		this.initKeys();
 
-		this.mainCanvas.startRendering(this.titleText);
 		this.prevCanvas.startRendering(this.prevBlock);
 		this.backCanvas.startRendering(this.gameGrid);
 
@@ -76,6 +58,27 @@ var ColumnsGame = new Class({
 		this.subtitleText.fade();
 		this.prevBlock.renewBlock();
 		this.initFalling();
+	},
+
+	initText: function() {
+		this.titleText = new CanvasText({
+			text: 'press space to start',
+			color: '#ccc',
+			font: 'bold 16pt Arial',
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2.5
+		});
+
+		this.subtitleText = new CanvasText({
+			text: 'press space to restart',
+			color: '#ccc',
+			font: '12pt Arial',
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2.5 + 20
+		});
+
+		this.titleText.pulse();
+		this.mainCanvas.startRendering(this.titleText);
 	},
 
 	initKeys: function() {
@@ -280,7 +283,7 @@ var ColumnsGame = new Class({
 	// check to see if any peices have reached to top of the grid
 	// if they have, then the game is over
 	isGameOver: function() {
-		var gx = ((this.canvas.width / this.squareSize) / 2).floor();
+		var gx = (this.gridWidth / 2).floor();
 		return this.gameGrid.grid[0][gx] != 0;
 	},
 
