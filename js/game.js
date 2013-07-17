@@ -252,16 +252,9 @@ var ColumnsGame = new Class({
 	isAtBottom: function() {
 		var bottomY = this.falling.y + this.falling.grid.length * this.squareSize;
 		var gx = (this.falling.x / this.squareSize).floor();
+		var gy = (bottomY / this.squareSize).floor();
 
-		var columnTop = this.canvas.height;
-		for(var y=0; y < this.gameGrid.grid.length; y++) {
-			if(this.gameGrid.grid[y][gx] != 0) {
-				columnTop = y * this.squareSize;
-				break;
-			}
-		}
-
-		return bottomY >= columnTop;
+		return gy >= this.gridHeight || this.gameGrid.grid[gy][gx] != 0;
 	},
 
 	disappearBlocks: function() {
