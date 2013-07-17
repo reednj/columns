@@ -12,6 +12,7 @@ var GameState = {
 
 var ColumnsGame = new Class({
 	initialize: function() {
+		this.gameState = GameState.start;
 
 		this.mainCanvas = new CanvasHelper('main-canvas', {onRedraw: this.update.bind(this) });
 		this.backCanvas = new CanvasHelper('back-canvas', {autoRedraw: false });
@@ -23,18 +24,14 @@ var ColumnsGame = new Class({
 		this.gridHeight = this.canvas.height / this.squareSize;
 
 		this.gameGrid = new GameGrid({ gridWidth: this.gridWidth, gridHeight: this.gridHeight });
-
-		this.gameState = GameState.start;
 		this.prevBlock = new BlockPreview();
-
-		this.resetBoard();
 
 		this.initText();
 		this.initKeys();
+		this.resetBoard();
 
 		this.prevCanvas.startRendering(this.prevBlock);
 		this.backCanvas.startRendering(this.gameGrid);
-
 		this.backCanvas.refresh();
 		this.prevCanvas.refresh();
 		this.mainCanvas.start();
