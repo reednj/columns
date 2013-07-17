@@ -15,6 +15,8 @@ var ColumnsGame = new Class({
 		this.gridWidth = this.canvas.width / this.squareSize;
 		this.gridHeight = this.canvas.height / this.squareSize;
 
+		this.gameGrid = new GameGrid({ gridWidth: this.gridWidth, gridHeight: this.gridHeight });
+
 		this.gameState = 'start';
 		this.prevBlock = new BlockPreview();
 
@@ -42,7 +44,7 @@ var ColumnsGame = new Class({
 
 		this.mainCanvas.startRendering(this.titleText);
 		this.prevCanvas.startRendering(this.prevBlock);
-		this.backCanvas.startRendering(this);
+		this.backCanvas.startRendering(this.gameGrid);
 
 		this.backCanvas.refresh();
 		this.prevCanvas.refresh();
@@ -51,10 +53,11 @@ var ColumnsGame = new Class({
 	},
 
 	resetBoard: function() {
-		this.grid = [];
+
 		this.fadeQueue = [];
 
-		this.initGrid();
+		this.gameGrid.grid = [];
+		this.gameGrid.initGrid();
 
 		this.points = 0;
 		this.blocksRemoved = 0;
@@ -113,36 +116,6 @@ var ColumnsGame = new Class({
 		return this.falling;
 	},
 
-	initGrid: function() {
-		var colorCode = 0;
-		for(var y=0; y < this.gridHeight; y++) {
-			var row = [];
-			for(var x=0; x < this.gridWidth; x++) {
-				row.push(colorCode);
-			}
-			this.grid.push(row);
-		}
-	},
-
-	render: function(context, canvas) {
-
-		for(var y=0; y < this.gridHeight; y++) {
-			for(var x=0; x < this.gridWidth; x++) {
-				var colorCode = this.grid[y][x];
-
-				if(colorCode != 0) {
-					this.drawSquare(context, x, y, colorCode)
-				}
-
-				// this is actually a v. bad way to draw a grid
-				// but it doesn't happen very often, so will leave it in for now
-				context.strokeStyle = '#333';
-				context.strokeRect(x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
-			}
-		}
-
-	},
-
 	update: function() {
 
 		if(this.gameState == 'falling') {
@@ -183,10 +156,7 @@ var ColumnsGame = new Class({
 		}
 	},
 
-	drawSquare: function(context, gx, gy, colorCode) {
-		context.fillStyle = ColumnColors[colorCode];
-		context.fillRect(gx * this.squareSize, gy * this.squareSize, this.squareSize, this.squareSize);
-	},
+
 
 	leftKey: function() {
 		if(!this.falling) {
@@ -198,7 +168,7 @@ var ColumnsGame = new Class({
 		// immediately to the left of the bottom falling peice square
 		// is empty
 		var gc = this.falling.gridCoordinates();
-		if(gc.x == 0 || this.grid[gc.y + this.falling.grid.length][gc.x - 1] != 0) {
+		if(gc.x == 0 || this.gameGrid.grid[gc.y + this.falling.grid.length][gc.x - 1] != 0) {
 			return;
 		}
 
@@ -211,7 +181,7 @@ var ColumnsGame = new Class({
 		}
 
 		var gc = this.falling.gridCoordinates();
-		if(gc.x == this.grid[0].length-1 || this.grid[gc.y + this.falling.grid.length][gc.x + 1] != 0) {
+		if(gc.x == this.gameGrid.grid[0].length-1 || this.gameGrid.grid[gc.y + this.falling.grid.length][gc.x + 1] != 0) {
 			return;
 		}
 
@@ -262,7 +232,7 @@ var ColumnsGame = new Class({
 	},
 
 	fallingHit: function() {
-		this.moveToGrid();
+		this.gameGrid.moveToGrid(this.falling);
 		this.falling.stopRendering();
 		this.falling = null;
 
@@ -281,8 +251,8 @@ var ColumnsGame = new Class({
 		var gx = (this.falling.x / this.squareSize).floor();
 
 		var columnTop = this.canvas.height;
-		for(var y=0; y < this.grid.length; y++) {
-			if(this.grid[y][gx] != 0) {
+		for(var y=0; y < this.gameGrid.grid.length; y++) {
+			if(this.gameGrid.grid[y][gx] != 0) {
 				columnTop = y * this.squareSize;
 				break;
 			}
@@ -293,14 +263,13 @@ var ColumnsGame = new Class({
 
 	disappearBlocks: function() {
 		var hasRun = false;
-		while(this.collapseGrid()) {}
+		while(this.gameGrid.collapseGrid()) {}
 
-		var runList = this.getRuns();
+		var runList = this.gameGrid.getRuns();
 		if(runList.length > 0) {
 			hasRun = true;
-			this.setBlocks(runList, 0);
+			this.gameGrid.setBlocks(runList, 0);
 			this.fadeBlocks(runList);
-
 			this.addPoints(runList.length);
 		}
 
@@ -312,9 +281,8 @@ var ColumnsGame = new Class({
 	// if they have, then the game is over
 	isGameOver: function() {
 		var gx = ((this.canvas.width / this.squareSize) / 2).floor();
-		return this.grid[0][gx] != 0;
+		return this.gameGrid.grid[0][gx] != 0;
 	},
-
 
 	gameOver: function() {
 		this.titleText.setText('GAME OVER').pulse();
@@ -347,50 +315,49 @@ var ColumnsGame = new Class({
 	blockSpeed: function() {
 		var maxSpeed = 4.0;
 		return (0.5 + this.level * 0.25).limit(1.0, maxSpeed);
+	}
+
+});
+
+
+var GameGrid = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+
+		this.grid = null;
+		this.gridHeight = this.options.gridHeight || 10;
+		this.gridWidth = this.options.gridWidth || 10;
+		this.squareSize = GameOptions.squareSize || 20;
+		this.initGrid();
+	},
+
+	initGrid: function() {
+		this.grid = [];
+		var colorCode = 0;
+
+		for(var y=0; y < this.gridHeight; y++) {
+			var row = [];
+			for(var x=0; x < this.gridWidth; x++) {
+				row.push(colorCode);
+			}
+			this.grid.push(row);
+		}
 	},
 
 	// moves the falling block into the grid to be redered normally
-	moveToGrid: function() {
-		var gx = (this.falling.x / this.squareSize).floor();
-		var gy = (this.falling.y / this.squareSize).floor();
+	moveToGrid: function(fallingBlock) {
+		var gx = (fallingBlock.x / this.squareSize).floor();
+		var gy = (fallingBlock.y / this.squareSize).floor();
 
-		this.falling.grid.each(function(colorCode, i) {
+		fallingBlock.grid.each(function(colorCode, i) {
 			this.grid[gy + i][gx] = colorCode;
 		}.bind(this));
-
 	},
 
 	setBlocks: function(blockArray, colorCode) {
 		blockArray.each(function(block) {
 			this.grid[block.y][block.x] = colorCode;
 		}.bind(this));
-	},
-
-	// collspases the grid veritcally, after blocks with something above them have been
-	// zeroed out. No animation at this stage
-	collapseGrid: function() {
-		var hasChanged = false;
-		// we want to loop through each column from bottom to top
-		for(var gx=0; gx < this.gridWidth; gx++) {
-			for(var gy=this.gridHeight - 1; gy >= 0 ; gy--) {
-				// if the current square is empty and the one above isn't,
-				// then move things down one
-				var curBlock = this.grid[gy][gx];
-				var blockAbove = (gy > 0)? this.grid[gy - 1][gx] : 0;
-
-				if(curBlock == 0 && blockAbove != 0) {
-					this.grid[gy][gx] = blockAbove;
-
-					if(gy != 0) {
-						this.grid[gy - 1][gx] = 0;
-					}
-
-					hasChanged = true;
-				}
-			}
-		}
-
-		return hasChanged;
 	},
 
 	// this function gets the list of squares of the same color that are lined up
@@ -492,7 +459,54 @@ var ColumnsGame = new Class({
 			}
 		}
 		return result;
+	},
+		// collspases the grid veritcally, after blocks with something above them have been
+	// zeroed out. No animation at this stage
+	collapseGrid: function() {
+		var hasChanged = false;
+		// we want to loop through each column from bottom to top
+		for(var gx=0; gx < this.gridWidth; gx++) {
+			for(var gy=this.gridHeight - 1; gy >= 0 ; gy--) {
+				// if the current square is empty and the one above isn't,
+				// then move things down one
+				var curBlock = this.grid[gy][gx];
+				var blockAbove = (gy > 0)? this.grid[gy - 1][gx] : 0;
+
+				if(curBlock == 0 && blockAbove != 0) {
+					this.grid[gy][gx] = blockAbove;
+
+					if(gy != 0) {
+						this.grid[gy - 1][gx] = 0;
+					}
+
+					hasChanged = true;
+				}
+			}
+		}
+
+		return hasChanged;
+	},
+
+	render: function(context, canvas) {
+
+		for(var y=0; y < this.gridHeight; y++) {
+			for(var x=0; x < this.gridWidth; x++) {
+				var colorCode = this.grid[y][x];
+
+				if(colorCode != 0) {
+					context.fillStyle = ColumnColors[colorCode];
+					context.fillRect(x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
+				}
+
+				// this is actually a v. bad way to draw a grid
+				// but it doesn't happen very often, so will leave it in for now
+				context.strokeStyle = '#333';
+				context.strokeRect(x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
+			}
+		}
+
 	}
+
 });
 
 // FadeBlock
