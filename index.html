@@ -14,22 +14,9 @@
 	<script src="js/game.js"></script>
 
 	<script type='text/javascript'>
-		var Ui = {
-			initialize: function() {
-				this.game = new ColumnsGame();
-			},
-
-			stop: function() {
-				this.game.stop();
-			},
-
-			start: function() {
-				this.game.start();
-			}
-		}
-
-		window.addEvent('load', Ui.initialize.bind(Ui));
-
+		window.addEvent('load', function() {
+			new ColumnsGame();
+		});
 	</script>
 
 	<script src="js/less.min.js"></script>
