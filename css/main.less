@@ -1,4 +1,4 @@
-@footer-size: 60px;
+@footer-size: 80px;
 @default-border: 1px solid #333;
 
 /* sticky footer stuff */
@@ -26,9 +26,23 @@ html, body {
 		border-top: 8px solid #282828;
 		color: gray;
 		font-size: 10pt;
-		font-weight: bold;
 		padding: 8px 16px;
-		text-align: right;
+		text-align: left;
+	}
+
+	.logo, .me {
+		float: left;
+	}
+
+	.logo {
+		margin-right: 8px;
+		img {
+			height: 50px;
+		}
+	}
+
+	.me {
+		margin-top: 8px;
 	}
 }
 
