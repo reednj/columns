@@ -33,6 +33,12 @@
     }
 }());
 
+// The global game options object is defined here so we don't get undefined
+// errors for some other class if it is not used by the application
+if(typeof GameOptions == 'undefined') {
+	var GameOptions = {};
+}
+
 // CanvasHelper
 //
 // Helper class to handle html5 cavnases and render subobjects in an

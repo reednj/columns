@@ -1,4 +1,8 @@
 
+var GameOptions = {
+	squareSize: 20
+};
+
 var ColumnsGame = new Class({
 	initialize: function() {
 
@@ -7,7 +11,7 @@ var ColumnsGame = new Class({
 		this.prevCanvas = new CanvasHelper('preview-canvas', {autoRedraw: false });
 		this.canvas = this.mainCanvas.canvas;
 
-		this.squareSize = 20;
+		this.squareSize = GameOptions.squareSize || 20;
 		this.gridWidth = this.canvas.width / this.squareSize;
 		this.gridHeight = this.canvas.height / this.squareSize;
 
@@ -98,7 +102,7 @@ var ColumnsGame = new Class({
 		}
 
 		this.falling = this.prevBlock.block;
-		this.falling.x = this.canvas.width / 2 - this.squareSize / 2;
+		this.falling.x = (this.gridWidth /2).floor() * this.squareSize;
 		this.falling.y = 0;
 		this.falling.yv = this.blockSpeed();
 
@@ -507,7 +511,7 @@ var FadeBlock = new Class({
 		this.x = this.options.x || 0;
 		this.y = this.options.y || 0;
 		this.duration = this.options.duration || 1000;
-		this.squareSize = this.options.squareSize || 20;
+		this.squareSize = this.options.squareSize || GameOptions.squareSize || 20;
 		this.renderingFinished = false;
 
 		this.currentShade = 0xff;
@@ -550,7 +554,7 @@ var FadeBlock = new Class({
 var BlockPreview = new Class({
 	initialize: function(options) {
 		this.options = options || {};
-		this.squareSize = 20;
+		this.squareSize = GameOptions.squareSize || 20;
 	},
 
 	renewBlock: function() {
@@ -595,7 +599,7 @@ var FallingBlock = new Class({
 
 		this.yv = this.options.yv || 1.5;
 		this.grid = [0, 0, 0];
-		this.squareSize = 20;
+		this.squareSize = GameOptions.squareSize || 20;
 		this.initGrid();
 
 	},
