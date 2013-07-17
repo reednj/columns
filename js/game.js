@@ -3,6 +3,13 @@ var GameOptions = {
 	squareSize: 20
 };
 
+var GameState = {
+	start: 0,
+	gameOver: 1,
+	falling: 2,
+	fading: 3
+};
+
 var ColumnsGame = new Class({
 	initialize: function() {
 
@@ -17,7 +24,7 @@ var ColumnsGame = new Class({
 
 		this.gameGrid = new GameGrid({ gridWidth: this.gridWidth, gridHeight: this.gridHeight });
 
-		this.gameState = 'start';
+		this.gameState = GameState.start;
 		this.prevBlock = new BlockPreview();
 
 		this.resetBoard();
@@ -53,7 +60,7 @@ var ColumnsGame = new Class({
 	},
 
 	start: function() {
-		this.gameState = 'falling';
+		this.gameState = GameState.falling;
 		this.titleText.fade();
 		this.subtitleText.fade();
 		this.prevBlock.renewBlock();
@@ -93,9 +100,9 @@ var ColumnsGame = new Class({
 				this.rotateUpKey();
 			} else if(e.key == 'space') {
 
-				if(this.gameState == 'falling') {
+				if(this.gameState == GameState.falling) {
 					this.fallfastKey();
-				} else if(this.gameState == 'start' || this.gameState == 'gameover') {
+				} else if(this.gameState == GameState.start || this.gameState == GameState.gameOver) {
 					this.startKey();
 				}
 			}
@@ -121,13 +128,13 @@ var ColumnsGame = new Class({
 
 	update: function() {
 
-		if(this.gameState == 'falling') {
+		if(this.gameState == GameState.falling) {
 			if(this.falling == null) {
 				// we are about to create a new peice at the top of
 				// the board, but just before lets check to see if the
 				// game is over
 				if(this.isGameOver()) {
-					this.gameState = 'gameover';
+					this.gameState = GameState.gameOver;
 					this.gameOver();
 					return;
 				}
@@ -140,7 +147,7 @@ var ColumnsGame = new Class({
 			if(this.isAtBottom()) {
 				this.fallingHit();
 			}
-		} else if(this.gameState == 'fading') {
+		} else if(this.gameState == GameState.fading) {
 
 			if(this.fadeQueue.length > 0) {
 				this.fadeQueue.each(function(f){ f.update(); });
@@ -149,10 +156,10 @@ var ColumnsGame = new Class({
 				var hasRun = this.disappearBlocks();
 
 				if(hasRun) {
-					this.gameState = 'fading'
+					this.gameState = GameState.fading;
 				} else {
 					this.pointsIncrement = 1;
-					this.gameState = 'falling'
+					this.gameState = GameState.falling;
 				}
 			}
 
@@ -214,7 +221,7 @@ var ColumnsGame = new Class({
 	},
 
 	startKey: function() {
-		if(this.gameState == 'gameover') {
+		if(this.gameState == GameState.gameOver) {
 			this.resetBoard();
 		}
 
@@ -242,9 +249,9 @@ var ColumnsGame = new Class({
 		var hasRun = this.disappearBlocks();
 
 		if(hasRun) {
-			this.gameState = 'fading';
+			this.gameState = GameState.fading;
 		} else {
-			this.gameState = 'falling';
+			this.gameState = GameState.falling;
 		}
 
 	},
