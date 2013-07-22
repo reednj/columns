@@ -15,8 +15,18 @@
 
 	<script type='text/javascript'>
 		window.addEvent('load', function() {
-			new Game();
+			Ui.init();
 		});
+
+		var Ui = {
+			init: function() {
+				this.game = new Game();
+			},
+
+			stop: function() {
+				this.game.stop();
+			}
+		}
 	</script>
 
 	<script src="js/less.min.js"></script>
@@ -26,7 +36,7 @@
 
 <div id='wrapper'>
 	<div class='game'>
-
+		<a href='javascript:Ui.stop.bind(Ui)();'>stop</a>
 		<div class='viewport'>
 			<canvas id='main-canvas' width='600' height='500'></canvas>
 		</div>
