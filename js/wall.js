@@ -10,8 +10,10 @@ var Game = new Class({
 
 
 		this.walls = [
-			new Wall({x: 300, y: 0}),
-			new Wall({x: 0, y: 250, length: 300}),
+			new Wall({x: 300, y: 0, direction: 'v', length: 500}),
+			new Wall({x: 0, y: 250, length: 300, direction: 'h'}),
+			new Wall({x: 600, y: 450, direction: 'h', isBuilding: true}),
+			new Wall({x: 500, y: 500, direction: 'v', isBuilding: true}),
 		];
 
 		this.balls = [];
@@ -57,6 +59,7 @@ var Game = new Class({
 
 	update: function() {
 		this.bounceBalls();
+		this.checkWalls();
 	},
 
 	bounceBalls: function() {
@@ -68,11 +71,11 @@ var Game = new Class({
 				var w = this.walls[j];
 
 				if(w.getDirection() == 'v') {
-					if((b.x - w.x).abs() < b.size && b.y >= w.y && b.y <= w.y + w.length) {
+					if((b.x - w.x).abs() < b.size && w.inBounds(b)) {
 						b.xv = -b.xv;
 					}
 				} else {
-					if((b.y - w.y).abs() < b.size && b.x >= w.x && b.x <= w.x + w.length) {
+					if((b.y - w.y).abs() < b.size && w.inBounds(b)) {
 						b.yv = -b.yv;
 					}
 				}
@@ -97,7 +100,20 @@ var Game = new Class({
 		}
 
 		return result;
+	},
+
+	checkWalls: function() {
+
+		for(var i=0; i < this.walls.length; i++) {
+			var wall = this.walls[i];
+
+			if(wall.isBuilding && wall.wallHit(this.walls)) {
+				wall.stopBuilding();
+			}
+		}
 	}
+
+
 });
 
 var Ball = new Class({
@@ -168,27 +184,77 @@ var Wall = new Class({
 		this.options = options || {};
 		this.x = this.options.x || 0;
 		this.y = this.options.y || 0;
-		this.length = this.options.length || 600;
+		this.length = this.options.length || 0;
+		this.direction = this.options.direction || 'v';
+		this.buildDirection = this.initBuildDirection();
+
+		this.buildSpeed = 1;
+		this.isBuilding = this.options.isBuilding === true? true : false;
+
+		if(this.isBuilding) {
+			this.length = 0;
+		}
 	},
 
 	render: function(context, canvas) {
+		if(this.isBuilding) {
+			this.build();
+		}
+
 		context.lineWidth = 8;
 		context.strokeStyle = '#888';
 
+		var p = this.endPoint();
 		context.beginPath();
 		context.moveTo(this.x, this.y);
-
-		if(this.getDirection() == 'v') {
-			context.lineTo(this.x, (this.y + this.length) || canvas.height);
-		} else {
-			context.lineTo((this.x + this.length) || canvas.width, this.y);
-		}
-
+		context.lineTo(p.x, p.y);
 		context.stroke();
 	},
 
+	build: function() {
+		this.length += this.buildSpeed;
+	},
+
 	getDirection: function() {
-		return this.x == 0 ? 'h' : 'v';
+		return this.direction;
+	},
+
+	// returns either 1 or -1
+	initBuildDirection: function() {
+		if(this.getDirection() == 'v') {
+			return (this.y == 0) ? 1 : -1;
+		} else {
+			return (this.x == 0) ? 1 : -1;
+		}
+	},
+
+	wallHit: function(walls) {
+		var result = false;
+
+		for(var i=0; i < walls.length; i++) {
+			var wall = walls[i];
+
+			if(wall.getDirection() != this.getDirection()) {
+				var p = this.endPoint();
+				var distance = (wall.getDirection() == 'v')? (p.x - wall.x).abs() : (p.y - wall.y).abs();
+
+				if(wall.inBounds(p) && distance < 5) {
+					result = true;
+					break;
+				}
+			}
+		}
+
+		return result;
+	},
+
+	stopBuilding: function() {
+		this.isBuilding = false;
+		return this;
+	},
+
+	endPoint: function() {
+		return (this.getDirection() == 'v')? {x: this.x, y: this.y + (this.length * this.buildDirection)} : {x: this.x + (this.length * this.buildDirection), y: this.y};
 	},
 
 	separates: function(ball1, ball2) {
@@ -218,7 +284,19 @@ var Wall = new Class({
 	// for the ball to be in bounds of the wall means that it is within the lengthways coordinates of the wall
 	// that means, for a horizontal wall, a vertical line could be drawn from some point on the wall and it
 	// would intersect the ball.
-	inBounds: function(ball) {
-		return (this.getDirection() == 'v') ? ball.y >= this.y && ball.y <= this.y + this.length : ball.x >= this.x && ball.x <= this.x + this.length;
+	inBounds: function(point) {
+		var start = {x: this.x, y: this.y};
+		var end = this.endPoint();
+
+		if(this.buildDirection == -1) {
+			// if the build direction is -ve then we need to swap the start and end point
+			// for the comparision to work. The start point must always be up and to the left
+			// of the end point
+			var tmp = start;
+			start = end;
+			end = tmp;
+		}
+
+		return (this.getDirection() == 'v') ? point.y >= start.y && point.y <= end.y : point.x >= start.x && point.x <= end.x;
 	}
 });
