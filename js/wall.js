@@ -13,21 +13,39 @@ var Game = new Class({
 			new Wall({x: 300, y: 0})
 		];
 
-		this.balls = [
-			new Ball({xv: 1, yv: 1})
-		];
+		this.balls = [];
+		this.addBall(10, 10);
 
 		this.walls.each(function(w) {
 			this.mainCanvas.add(w);
 		}.bind(this));
 
 
-		this.mainCanvas.add(this.balls[0]);
 		this.mainCanvas.start();
+
+		this.mainCanvas.canvas.addEvent('click', function(e) {
+			var x = e.client.x - this.mainCanvas.canvas.offsetLeft;
+			var y = e.client.y - this.mainCanvas.canvas.offsetTop;
+
+			this.addBall(x, y);
+
+		}.bind(this));
 	},
 
 	stop: function() {
 		this.mainCanvas.stop();
+	},
+
+	addBall: function(x, y) {
+		var b = new Ball({
+			x: x,
+			y: y,
+			xv: 1,
+			yv: 1
+		});
+
+		this.balls.push(b);
+		this.mainCanvas.add(b);
 	},
 
 	update: function() {
