@@ -88,7 +88,7 @@ var Game = new Class({
 		}
 
 		for(var i=0; i < this.balls.length; i++){
-			for(var j=0; j < this.balls.length; j++){
+			for(var j=i+1; j < this.balls.length; j++){
 				if(!this.balls[i].isSeparated(this.balls[j], this.walls)) {
 					result = false;
 					break;
