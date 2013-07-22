@@ -11,7 +11,7 @@ var Game = new Class({
 
 		this.walls = [
 			new Wall({x: 300, y: 0, direction: 'v', length: 500}),
-			new Wall({x: 0, y: 250, length: 300, direction: 'h'}),
+			new Wall({x: 0, y: 250, length: 300, direction: 'h', isBuilding: true}),
 			new Wall({x: 600, y: 450, direction: 'h', isBuilding: true}),
 			new Wall({x: 500, y: 500, direction: 'v', isBuilding: true}),
 		];
@@ -70,15 +70,14 @@ var Game = new Class({
 			for(j=0; j < this.walls.length; j++) {
 				var w = this.walls[j];
 
-				if(w.getDirection() == 'v') {
-					if((b.x - w.x).abs() < b.size && w.inBounds(b)) {
+				if(w.distance(b) < b.size && w.inBounds(b)) {
+					if(w.getDirection() == 'v') {
 						b.xv = -b.xv;
-					}
-				} else {
-					if((b.y - w.y).abs() < b.size && w.inBounds(b)) {
+					} else {
 						b.yv = -b.yv;
 					}
 				}
+
 			}
 		}
 	},
@@ -168,7 +167,7 @@ var Ball = new Class({
 		// b1.x < w.x < b2.x for vertical walls, and within the y bounds of the wall
 		for(var i=0; i < walls.length; i++) {
 			var wall = walls[i];
-			if(wall.separates(this, ball)) {
+			if(!wall.isBuilding && wall.separates(this, ball)) {
 				result = true;
 				break;
 			}
@@ -190,6 +189,8 @@ var Wall = new Class({
 
 		this.buildSpeed = 1;
 		this.isBuilding = this.options.isBuilding === true? true : false;
+
+		this.canvas = this.options.canvas || $('main-canvas') || document.getElement('canvas');
 
 		if(this.isBuilding) {
 			this.length = 0;
@@ -230,15 +231,25 @@ var Wall = new Class({
 
 	wallHit: function(walls) {
 		var result = false;
+		var endPoint = this.endPoint();
 
+		// first check to see if we hit the end of the canvas
+		if(this.getDirection() == 'v') {
+			if((this.buildDirection == 1 && endPoint.y >= this.canvas.height) || (this.buildDirection == -1 && endPoint.y <= 0)) {
+				return true;
+			}
+		} else {
+			if((this.buildDirection == 1 && endPoint.x >= this.canvas.width) || (this.buildDirection == -1 && endPoint.x <= 0)) {
+				return true;
+			}
+		}
+
+		// check the other walls to see if we hit one of them
 		for(var i=0; i < walls.length; i++) {
 			var wall = walls[i];
 
 			if(wall.getDirection() != this.getDirection()) {
-				var p = this.endPoint();
-				var distance = (wall.getDirection() == 'v')? (p.x - wall.x).abs() : (p.y - wall.y).abs();
-
-				if(wall.inBounds(p) && distance < 5) {
+				if(wall.inBounds(endPoint) && wall.distance(endPoint) < 5) {
 					result = true;
 					break;
 				}
@@ -279,6 +290,10 @@ var Wall = new Class({
 		}
 
 
+	},
+
+	distance: function(p) {
+		return (this.getDirection() == 'v')? (p.x - this.x).abs() : (p.y - this.y).abs();
 	},
 
 	// for the ball to be in bounds of the wall means that it is within the lengthways coordinates of the wall
