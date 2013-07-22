@@ -120,6 +120,10 @@ var CanvasHelper = new Class({
 		}
 	},
 
+	add: function(o) {
+		return this.startRendering(o);
+	},
+
 	startRendering: function(o) {
     	if(!o) {
     		return;
