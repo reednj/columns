@@ -1,6 +1,7 @@
 
 var GameOptions = {
-	borderWidth: 20
+	borderWidth: 20,
+	wallWidth: 20
 };
 
 var Game = new Class({
@@ -9,6 +10,7 @@ var Game = new Class({
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: true, onRedraw: this.update.bind(this)});
 		this.canvas = this.mainCanvas.canvas;
 		this.borderWidth = GameOptions.borderWidth || 0;
+		this.wallWidth = GameOptions.wallWidth || this.borderWidth || 10;
 
 		this.walls = [];
 		this.balls = [];
@@ -35,24 +37,37 @@ var Game = new Class({
 
 	addWall: function(x, y) {
 		var direction = null;
+		var edgeCount = 0;
 
 		if(x < this.borderWidth) {
 			x = 0;
 			direction = 'h';
+			edgeCount++;
 		} else if(x > (this.canvas.width - this.borderWidth)) {
 			x = this.canvas.width;
 			direction = 'h';
+			edgeCount++;
 		}
 
 		if(y < this.borderWidth) {
 			y = 0;
 			direction = 'v';
+			edgeCount++;
 		} else if(y > (this.canvas.height - this.borderWidth)) {
 			y = this.canvas.height;
 			direction = 'v';
+			edgeCount++;
 		}
 
-		if(direction != null) {
+		if(direction == 'v' && (x < this.borderWidth + this.wallWidth / 2 || x > this.canvas.width - this.borderWidth - this.wallWidth/2)) {
+			return;
+		} else if(direction == 'h' && (y < this.borderWidth + this.wallWidth / 2 || y > this.canvas.height - this.borderWidth - this.wallWidth/2)){
+			return;
+		}
+
+		// we need to make sure that the user clicked on the border, and that they
+		// didn't click on a corner
+		if(direction != null && edgeCount <= 1) {
 
 			var w = new Wall({
 				x: x,
