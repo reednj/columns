@@ -1,60 +1,80 @@
 
 var GameOptions = {
-
+	borderWidth: 20
 };
 
 var Game = new Class({
 	initialize: function(options) {
 		this.options = options || {};
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: true, onRedraw: this.update.bind(this)});
+		this.canvas = this.mainCanvas.canvas;
+		this.borderWidth = GameOptions.borderWidth || 0;
 
-
-		this.walls = [
-			new Wall({x: 300, y: 0, direction: 'v', length: 500}),
-			new Wall({x: 0, y: 250, length: 300, direction: 'h', isBuilding: true}),
-			new Wall({x: 600, y: 450, direction: 'h', isBuilding: true}),
-			new Wall({x: 500, y: 500, direction: 'v', isBuilding: true}),
-		];
-
+		this.walls = [];
 		this.balls = [];
-		this.addBall(10, 10);
+		this.board = new GameBoard();
 
-		this.walls.each(function(w) {
-			this.mainCanvas.add(w);
-		}.bind(this));
+		for(var i=0; i < 4; i++) {
+			this.addBall(this.canvas.width / 2, this.canvas.height / 2);
+		}
 
-
+		this.mainCanvas.add(this.board);
 		this.mainCanvas.start();
 
 		this.mainCanvas.canvas.addEvent('click', function(e) {
 			var x = e.client.x - this.mainCanvas.canvas.offsetLeft;
 			var y = e.client.y - this.mainCanvas.canvas.offsetTop;
-
-			this.addBall(x, y);
-
+			this.addWall(x, y);
 		}.bind(this));
+
 	},
 
 	stop: function() {
 		this.mainCanvas.stop();
 	},
 
+	addWall: function(x, y) {
+		var direction = null;
+
+		if(x < this.borderWidth) {
+			x = 0;
+			direction = 'h';
+		} else if(x > (this.canvas.width - this.borderWidth)) {
+			x = this.canvas.width;
+			direction = 'h';
+		}
+
+		if(y < this.borderWidth) {
+			y = 0;
+			direction = 'v';
+		} else if(y > (this.canvas.height - this.borderWidth)) {
+			y = this.canvas.height;
+			direction = 'v';
+		}
+
+		if(direction != null) {
+
+			var w = new Wall({
+				x: x,
+				y: y,
+				direction: direction
+			});
+
+			this.walls.push(w);
+			this.mainCanvas.add(w);
+		}
+	},
+
 	addBall: function(x, y) {
 		var b = new Ball({
 			x: x,
 			y: y,
-			xv: 1,
-			yv: 1
+			xv: Math.random() * 3 - 1.5,
+			yv: Math.random() * 3 - 1.5
 		});
 
 		this.balls.push(b);
 		this.mainCanvas.add(b);
-
-		if(this.areBallsSeparate()) {
-			$('sep').innerHTML = 'SEPARATE';
-		} else {
-			$('sep').innerHTML = 'JOINED';
-		}
 	},
 
 	update: function() {
@@ -63,18 +83,24 @@ var Game = new Class({
 	},
 
 	bounceBalls: function() {
-		// we need to make the bal bounce off the added walls. the ball object itself takes care
+		// we need to make the ball bounce off the added walls. the ball object itself takes care
 		// of the bouncing off the edges of the canvas
 		for(var i=0; i < this.balls.length; i++){
 			var b = this.balls[i];
 			for(j=0; j < this.walls.length; j++) {
 				var w = this.walls[j];
 
-				if(w.distance(b) < b.size && w.inBounds(b)) {
+				//if(w.inBounds(b)) {
+				//	$('dis').innerHTML = w.distance(b);
+				//}
+
+				if(w.distance(b) < 10 && w.inBounds(b)) {
 					if(w.getDirection() == 'v') {
 						b.xv = -b.xv;
+						b.x += b.xv;
 					} else {
 						b.yv = -b.yv;
+						b.y += b.yv;
 					}
 				}
 
@@ -102,17 +128,39 @@ var Game = new Class({
 	},
 
 	checkWalls: function() {
-
 		for(var i=0; i < this.walls.length; i++) {
 			var wall = this.walls[i];
 
 			if(wall.isBuilding && wall.wallHit(this.walls)) {
 				wall.stopBuilding();
+				this.wallComplete(wall);
 			}
+		}
+	},
+
+	wallComplete: function(wall) {
+		var levelComplete = this.areBallsSeparate();
+
+		if(levelComplete) {
+			alert('finished!');
 		}
 	}
 
 
+});
+
+var GameBoard = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.borderWidth = this.options.borderWidth || GameOptions.borderWidth;
+		this.borderColor = '#222';
+	},
+
+	render: function(context, canvas) {
+		context.strokeStyle = this.borderColor;
+		context.lineWidth = this.borderWidth;
+		context.strokeRect(this.borderWidth/2, this.borderWidth/2, canvas.width - this.borderWidth, canvas.height - this.borderWidth);
+	}
 });
 
 var Ball = new Class({
@@ -120,6 +168,7 @@ var Ball = new Class({
 	initialize: function(options) {
 		this.parent(options);
 		this.size = this.options.size || 8;
+		this.borderWidth = GameOptions.borderWidth || 0;
 
 	},
 
@@ -137,19 +186,19 @@ var Ball = new Class({
 	move: function(canvas) {
 		this.parent();
 
-		if(this.x >= canvas.width) {
-			this.x = canvas.width - 1;
+		if(this.x >= canvas.width - this.borderWidth) {
+			this.x = canvas.width - this.borderWidth - 1;
 			this.xv = -this.xv;
-		} else if(this.x <= 0) {
-			this.x = 1;
+		} else if(this.x <= this.borderWidth) {
+			this.x = this.borderWidth + 1;
 			this.xv = -this.xv;
 		}
 
-		if(this.y >= canvas.height) {
-			this.y = canvas.height - 1;
+		if(this.y >= canvas.height - this.borderWidth) {
+			this.y = canvas.height - this.borderWidth - 1;
 			this.yv = -this.yv;
-		} else if(this.y <= 0) {
-			this.y = 1;
+		} else if(this.y <= this.borderWidth) {
+			this.y = this.borderWidth + 1;
 			this.yv = -this.yv;
 		}
 
@@ -186,9 +235,10 @@ var Wall = new Class({
 		this.length = this.options.length || 0;
 		this.direction = this.options.direction || 'v';
 		this.buildDirection = this.initBuildDirection();
+		this.color = '#222';
 
 		this.buildSpeed = 1;
-		this.isBuilding = this.options.isBuilding === true? true : false;
+		this.isBuilding = this.options.isBuilding === true || this.length == 0? true : false;
 
 		this.canvas = this.options.canvas || $('main-canvas') || document.getElement('canvas');
 
@@ -202,8 +252,8 @@ var Wall = new Class({
 			this.build();
 		}
 
-		context.lineWidth = 8;
-		context.strokeStyle = '#888';
+		context.lineWidth = 20;
+		context.strokeStyle = this.color ;
 
 		var p = this.endPoint();
 		context.beginPath();
