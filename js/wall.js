@@ -90,7 +90,7 @@ var Game = new Class({
 			for(j=0; j < this.walls.length; j++) {
 				var w = this.walls[j];
 
-				if(w.distance(b) < 10 && w.inBounds(b)) {
+				if(w.distance(b) < b.size + (w.width / 2) && w.inBounds(b)) {
 					if(w.getDirection() == 'v') {
 						b.xv = -b.xv;
 						b.x += b.xv;
@@ -190,19 +190,19 @@ var Ball = new Class({
 	move: function(canvas) {
 		this.parent();
 
-		if(this.x >= canvas.width - this.borderWidth) {
-			this.x = canvas.width - this.borderWidth - 1;
+		if(this.x + this.size >= canvas.width - this.borderWidth) {
+			this.x = canvas.width - this.borderWidth - this.size;
 			this.xv = -this.xv;
-		} else if(this.x <= this.borderWidth) {
-			this.x = this.borderWidth + 1;
+		} else if(this.x - this.size <= this.borderWidth) {
+			this.x = this.borderWidth + this.size;
 			this.xv = -this.xv;
 		}
 
-		if(this.y >= canvas.height - this.borderWidth) {
-			this.y = canvas.height - this.borderWidth - 1;
+		if(this.y + this.size >= canvas.height - this.borderWidth) {
+			this.y = canvas.height - this.borderWidth - this.size;
 			this.yv = -this.yv;
-		} else if(this.y <= this.borderWidth) {
-			this.y = this.borderWidth + 1;
+		} else if(this.y - this.size <= this.borderWidth) {
+			this.y = this.borderWidth + this.size;
 			this.yv = -this.yv;
 		}
 
@@ -241,6 +241,7 @@ var Wall = new Class({
 		this.buildDirection = this.initBuildDirection();
 		this.color = '#222';
 		this.borderWidth = this.options.borderWidth || GameOptions.borderWidth || 10;
+		this.width = this.options.width || 20;
 
 		this.buildSpeed = 1;
 		this.isBuilding = this.options.isBuilding === true || this.length == 0? true : false;
@@ -259,10 +260,9 @@ var Wall = new Class({
 		if(this.isBuilding) {
 			this.build();
 			var gradLength = 40;
-			var borderWidth = 20;
 
-			if(this.length - borderWidth - gradLength < 0) {
-				gradLength = this.length - borderWidth;
+			if(this.length - this.borderWidth - gradLength < 0) {
+				gradLength = this.length - this.borderWidth;
 			}
 
 			if(gradLength > 0) {
@@ -275,7 +275,7 @@ var Wall = new Class({
 
 		}
 
-		context.lineWidth = 20;
+		context.lineWidth = this.width;
 		context.strokeStyle = style;
 
 		context.beginPath();
