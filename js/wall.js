@@ -90,10 +90,6 @@ var Game = new Class({
 			for(j=0; j < this.walls.length; j++) {
 				var w = this.walls[j];
 
-				//if(w.inBounds(b)) {
-				//	$('dis').innerHTML = w.distance(b);
-				//}
-
 				if(w.distance(b) < 10 && w.inBounds(b)) {
 					if(w.getDirection() == 'v') {
 						b.xv = -b.xv;
@@ -101,6 +97,10 @@ var Game = new Class({
 					} else {
 						b.yv = -b.yv;
 						b.y += b.yv;
+					}
+
+					if(w.inBuildBounds(b)) {
+						this.gameOverHit();
 					}
 				}
 
@@ -144,6 +144,10 @@ var Game = new Class({
 		if(levelComplete) {
 			alert('finished!');
 		}
+	},
+
+	gameOverHit: function(ball, wall) {
+		alert('game over');
 	}
 
 
@@ -236,6 +240,7 @@ var Wall = new Class({
 		this.direction = this.options.direction || 'v';
 		this.buildDirection = this.initBuildDirection();
 		this.color = '#222';
+		this.borderWidth = this.options.borderWidth || GameOptions.borderWidth || 10;
 
 		this.buildSpeed = 1;
 		this.isBuilding = this.options.isBuilding === true || this.length == 0? true : false;
@@ -243,19 +248,36 @@ var Wall = new Class({
 		this.canvas = this.options.canvas || $('main-canvas') || document.getElement('canvas');
 
 		if(this.isBuilding) {
-			this.length = 0;
+			this.length = GameOptions.borderWidth || 0;
 		}
 	},
 
 	render: function(context, canvas) {
+		var style = this.color;
+		var p = this.endPoint();
+
 		if(this.isBuilding) {
 			this.build();
+			var gradLength = 40;
+			var borderWidth = 20;
+
+			if(this.length - borderWidth - gradLength < 0) {
+				gradLength = this.length - borderWidth;
+			}
+
+			if(gradLength > 0) {
+				var s = (this.getDirection() == 'v')? {x: p.x, y: p.y - gradLength * this.buildDirection} : {x: p.x - gradLength * this.buildDirection, y: p.y };
+				var g = context.createLinearGradient(s.x, s.y, p.x, p.y);
+				g.addColorStop(0.0, this.color);
+				g.addColorStop(1.0, 'rgba(255, 0, 0, 0.5)');
+				style = g;
+			}
+
 		}
 
 		context.lineWidth = 20;
-		context.strokeStyle = this.color ;
+		context.strokeStyle = style;
 
-		var p = this.endPoint();
 		context.beginPath();
 		context.moveTo(this.x, this.y);
 		context.lineTo(p.x, p.y);
@@ -285,11 +307,11 @@ var Wall = new Class({
 
 		// first check to see if we hit the end of the canvas
 		if(this.getDirection() == 'v') {
-			if((this.buildDirection == 1 && endPoint.y >= this.canvas.height) || (this.buildDirection == -1 && endPoint.y <= 0)) {
+			if((this.buildDirection == 1 && endPoint.y >= this.canvas.height - this.borderWidth) || (this.buildDirection == -1 && endPoint.y <= this.borderWidth)) {
 				return true;
 			}
 		} else {
-			if((this.buildDirection == 1 && endPoint.x >= this.canvas.width) || (this.buildDirection == -1 && endPoint.x <= 0)) {
+			if((this.buildDirection == 1 && endPoint.x >= this.canvas.width - this.borderWidth) || (this.buildDirection == -1 && endPoint.x <= this.borderWidth)) {
 				return true;
 			}
 		}
@@ -363,5 +385,26 @@ var Wall = new Class({
 		}
 
 		return (this.getDirection() == 'v') ? point.y >= start.y && point.y <= end.y : point.x >= start.x && point.x <= end.x;
+	},
+
+	inBuildBounds: function(point) {
+		if(!this.isBuilding) {
+			// a wall that isn't building has no build bounds
+			return false;
+		}
+
+		var gradLength = 40;
+		var end = this.endPoint();
+		var start = (this.getDirection() == 'v')? {x: end.x, y: end.y - gradLength * this.buildDirection} : {x: end.x - gradLength * this.buildDirection, y: end.y };
+
+		if(this.buildDirection == -1) {
+			var tmp = start;
+			start = end;
+			end = tmp;
+		}
+
+		return (this.getDirection() == 'v') ? point.y >= start.y && point.y <= end.y : point.x >= start.x && point.x <= end.x;
 	}
 });
+
+
