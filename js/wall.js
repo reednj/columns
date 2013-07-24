@@ -65,6 +65,20 @@ var Game = new Class({
 			return;
 		}
 
+		// now we want to check existing walls of the same type, and make sure we are not trying to
+		// build over the top of then
+		if(direction != null) {
+			for(var i=0; i < this.walls.length; i++) {
+				var w = this.walls[i];
+				if(w.getDirection() == direction && (
+					(direction == 'v' && (w.x - x).abs() < this.wallWidth) ||
+					(direction == 'h' && (w.y - y).abs() < this.wallWidth)
+				)) {
+					return;
+				}
+			}
+		}
+
 		// we need to make sure that the user clicked on the border, and that they
 		// didn't click on a corner
 		if(direction != null && edgeCount <= 1) {
