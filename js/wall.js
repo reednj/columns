@@ -34,10 +34,31 @@ var Game = new Class({
 			text: 'click to start'
 		});
 
+		this.levelText= new CanvasText({
+			x: this.canvas.width - this.borderWidth - 10,
+			y: this.borderWidth + this.borderWidth + 15,
+			color: '#999',
+			font: '24pt Arial',
+			text: '',
+			align: 'right'
+		});
+
+		this.timerText = new CanvasText({
+			x: this.borderWidth + 10,
+			y: this.borderWidth + this.borderWidth + 15,
+			color: '#999',
+			font: '24pt Arial',
+			text: '',
+			align: 'left'
+		});
+
 		this.titleText.pulse();
 
 		this.mainCanvas.add(this.board);
 		this.mainCanvas.add(this.titleText);
+		this.mainCanvas.add(this.levelText);
+		this.mainCanvas.add(this.timerText);
+
 		this.mainCanvas.start();
 		this.initEvents();
 	},
@@ -87,6 +108,8 @@ var Game = new Class({
 	},
 
 	startLevel: function() {
+		this.levelStart = new Date();
+		this.levelText.setText('Level ' + this.level);
 		for(var i=0; i < this.level + 1; i++) {
 			this.addBall(this.canvas.width * Math.random() * 0.8 + 50, this.canvas.height * Math.random() * 0.8 + 50);
 		}
@@ -171,6 +194,17 @@ var Game = new Class({
 			this.bounceBalls();
 			this.checkWalls();
 		}
+
+		if(this.gameState == GameState.running) {
+			this.updateTimer();
+		}
+
+	},
+
+	updateTimer: function() {
+		var now = new Date();
+		var text = ((now - this.levelStart) / 1000).toFixed(1);
+		this.timerText.setText(text);
 	},
 
 	bounceBalls: function() {

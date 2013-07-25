@@ -185,6 +185,7 @@ var CanvasText = new Class({
 		this.font = this.options.font || '12pt Arial';
 		this.color = this.options.color || '#888';
 		this.opacity = 1.0;
+		this.align = this.options.align || 'center';
 
 		this.x = this.options.x || 0;
 		this.y = this.options.y || 0;
@@ -194,7 +195,7 @@ var CanvasText = new Class({
 	},
 
 	setText: function(text) {
-		if(typeOf(text) == 'string') {
+		if(typeOf(text) == 'string' || text.toString) {
 			this.text = text;
 		}
 		return this;
@@ -224,7 +225,7 @@ var CanvasText = new Class({
 		}
 
 		context.font = this.font;
-		context.textAlign = 'center';
+		context.textAlign = this.align;
 		context.fillText(this.text, this.x, this.y);
 	},
 
