@@ -5,6 +5,11 @@ var GameOptions = {
 	hintSize: 20
 };
 
+var GameState = {
+	start: 0,
+	running: 1
+};
+
 var Game = new Class({
 	initialize: function(options) {
 		this.options = options || {};
@@ -13,6 +18,7 @@ var Game = new Class({
 
 		this.borderWidth = GameOptions.borderWidth || 0;
 		this.wallWidth = GameOptions.wallWidth || this.borderWidth || 10;
+		this.gameState = GameState.start;
 
 		this.tick = 0;
 		this.level = 1;
@@ -20,18 +26,33 @@ var Game = new Class({
 		this.balls = [];
 		this.board = new GameBoard();
 
-		this.mainCanvas.add(this.board);
-		this.mainCanvas.start();
+		this.titleText = new CanvasText({
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2,
+			color: '#222',
+			font: '24pt Arial',
+			text: 'click to start'
+		});
 
+		this.titleText.pulse();
+
+		this.mainCanvas.add(this.board);
+		this.mainCanvas.add(this.titleText);
+		this.mainCanvas.start();
 		this.initEvents();
-		this.startLevel();
 	},
 
 	initEvents: function() {
 		this.mainCanvas.canvas.addEvent('click', function(e) {
-			var x = e.client.x - this.mainCanvas.canvas.offsetLeft;
-			var y = e.client.y - this.mainCanvas.canvas.offsetTop;
-			this.addWall(x, y);
+			if(this.gameState == GameState.running) {
+				var x = e.client.x - this.mainCanvas.canvas.offsetLeft;
+				var y = e.client.y - this.mainCanvas.canvas.offsetTop;
+				this.addWall(x, y);
+			} else if(this.gameState == GameState.start) {
+				this.gameState = GameState.running;
+				this.titleText.fade();
+				this.startLevel();
+			}
 		}.bind(this));
 
 		this.mainCanvas.canvas.addEvent('mousemove', function(e) {
@@ -49,6 +70,7 @@ var Game = new Class({
 		this.mainCanvas.canvas.addEvent('mouseout', function(){
 			this.board.hideHint();
 		}.bind(this));
+
 	},
 
 	stop: function() {
@@ -78,22 +100,23 @@ var Game = new Class({
 	addWall: function(x, y) {
 		var direction = null;
 		var edgeCount = 0;
+		var hintSize = GameOptions.hintSize || 20;
 
-		if(x < this.borderWidth) {
+		if(x < this.borderWidth + hintSize) {
 			x = 0;
 			direction = 'h';
 			edgeCount++;
-		} else if(x > (this.canvas.width - this.borderWidth)) {
+		} else if(x > (this.canvas.width - this.borderWidth - hintSize)) {
 			x = this.canvas.width;
 			direction = 'h';
 			edgeCount++;
 		}
 
-		if(y < this.borderWidth) {
+		if(y < this.borderWidth + hintSize) {
 			y = 0;
 			direction = 'v';
 			edgeCount++;
-		} else if(y > (this.canvas.height - this.borderWidth)) {
+		} else if(y > (this.canvas.height - this.borderWidth - hintSize)) {
 			y = this.canvas.height;
 			direction = 'v';
 			edgeCount++;
