@@ -87,9 +87,8 @@ var Game = new Class({
 	},
 
 	startLevel: function() {
-
 		for(var i=0; i < this.level + 1; i++) {
-			this.addBall(this.canvas.width / 2, this.canvas.height / 2);
+			this.addBall(this.canvas.width * Math.random() * 0.8 + 50, this.canvas.height * Math.random() * 0.8 + 50);
 		}
 	},
 
@@ -198,6 +197,27 @@ var Game = new Class({
 
 			}
 		}
+
+		// now we want to bounce the balls off each other
+		for(var i=0; i < this.balls.length; i++){
+			for(var j=0; j < this.balls.length; j++){
+				if(i == j) {
+					continue;
+				}
+
+				var b1 = this.balls[i];
+				var b2 = this.balls[j];
+				var d = b1.distanceFrom(b2);
+
+				if(d != 0 && d < b1.size * 2.5) {
+					var acc = 1 / Math.pow(d * 0.1, 2);
+					var vec = VectorHelper.makeUnit({x:b2.x - b1.x, y: b2.y - b1.y });
+					acc = acc.limit(0, 4);
+					b1.xv -= vec.x * acc;
+					b1.yv -= vec.y * acc;
+				}
+			}
+		}
 	},
 
 	areBallsSeparate: function() {
@@ -234,7 +254,7 @@ var Game = new Class({
 		var levelComplete = this.areBallsSeparate();
 
 		if(levelComplete) {
-			this.levelUp();
+			this.levelUp.delay(500, this);
 		}
 	},
 
@@ -326,13 +346,14 @@ var Ball = new Class({
 		this.parent(options);
 		this.size = this.options.size || 8;
 		this.borderWidth = GameOptions.borderWidth || 0;
+		this.color = this.options.color || '#4096EE';
 
 	},
 
 	render: function(context, canvas) {
 		this.move(canvas);
 
-		context.fillStyle = '#888';
+		context.fillStyle = this.color;
 		context.beginPath();
 		context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
 		context.closePath();
@@ -412,6 +433,7 @@ var Wall = new Class({
 
 	render: function(context, canvas) {
 		var style = this.color;
+		var tipColor = '#4096EE';
 		var p = this.endPoint();
 
 		if(this.isBuilding || this.isFading) {
@@ -420,7 +442,7 @@ var Wall = new Class({
 			}
 
 			var gradLength = 40;
-			var endColor = '#f57777';
+			var endColor = tipColor;
 
 			if(this.length - this.borderWidth - gradLength < 0) {
 				gradLength = this.length - this.borderWidth;
@@ -428,7 +450,7 @@ var Wall = new Class({
 
 			if(this.isFading) {
 				this.fadeStep += 0.05
-				endColor = ColorHelper.colorStep('#f57777', this.color, this.fadeStep);
+				endColor = ColorHelper.colorStep(tipColor, this.color, this.fadeStep);
 
 				if(this.fadeStep > 1) {
 					this.isFading = false;
@@ -618,4 +640,15 @@ var ColorHelper = {
       return c.hexToRgb(true);
     }
   }
+}
+
+var VectorHelper = {
+	makeUnit: function(v) {
+		var s = VectorHelper.size(v);
+		return {x: v.x / s, y: v.y / s};
+	},
+
+	size: function(v) {
+		return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+	}
 }
