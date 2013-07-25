@@ -69,6 +69,9 @@ if(typeof GameOptions == 'undefined') {
 //		// starts the draw loop.
 //		helper.start();
 //
+// In order to change the order of the rendering, set a zIndex property on the object that is
+// passed to add/startRendering. If the zIndex is missing is it assumed to be 1
+//
 var CanvasHelper = new Class({
 	initialize: function(element, options) {
 		this.element = $(element);
