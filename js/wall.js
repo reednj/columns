@@ -53,6 +53,8 @@ var Game = new Class({
 		});
 
 		this.titleText.pulse();
+		this.timerText.zIndex = -1;
+		this.levelText.zIndex = -1;
 
 		this.mainCanvas.add(this.board);
 		this.mainCanvas.add(this.titleText);

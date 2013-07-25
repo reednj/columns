@@ -146,6 +146,10 @@ var CanvasHelper = new Class({
 		}
 
 		this.renderQueue.push(o);
+
+		// now we need to sort the render queue by zindex to make sure it is rendered in the same order
+		this.renderQueue.sort(function(a, b) { return (a.zIndex || 1) - (b.zIndex || 1); });
+
 		return this;
 	},
 
