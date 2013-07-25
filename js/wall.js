@@ -14,12 +14,11 @@ var Game = new Class({
 		this.borderWidth = GameOptions.borderWidth || 0;
 		this.wallWidth = GameOptions.wallWidth || this.borderWidth || 10;
 
+		this.tick = 0;
 		this.level = 1;
 		this.walls = [];
 		this.balls = [];
 		this.board = new GameBoard();
-
-
 
 		this.mainCanvas.add(this.board);
 		this.mainCanvas.start();
@@ -148,8 +147,12 @@ var Game = new Class({
 	},
 
 	update: function() {
-		this.bounceBalls();
-		this.checkWalls();
+		this.tick++;
+
+		if(this.tick % 2 == 0) {
+			this.bounceBalls();
+			this.checkWalls();
+		}
 	},
 
 	bounceBalls: function() {
@@ -218,6 +221,7 @@ var Game = new Class({
 
 	gameOverHit: function(ball, wall) {
 		this.resetBoard();
+		this.startLevel();
 	},
 
 	levelUp: function() {
@@ -372,13 +376,15 @@ var Wall = new Class({
 		this.color = '#222';
 		this.borderWidth = this.options.borderWidth || GameOptions.borderWidth || 10;
 		this.width = this.options.width || 20;
+		this.renderingFinished = false;
+
+		this.isFading = false;
+		this.fadeStep = 0;
 
 		this.buildSpeed = 1;
 		this.isBuilding = this.options.isBuilding === true || this.length == 0? true : false;
 
 		this.canvas = this.options.canvas || $('main-canvas') || document.getElement('canvas');
-
-		this.renderingFinished = false;
 
 		if(this.isBuilding) {
 			this.length = GameOptions.borderWidth + 20 || 0;
@@ -389,19 +395,32 @@ var Wall = new Class({
 		var style = this.color;
 		var p = this.endPoint();
 
-		if(this.isBuilding) {
-			this.build();
+		if(this.isBuilding || this.isFading) {
+			if(this.isBuilding) {
+				this.build();
+			}
+
 			var gradLength = 40;
+			var endColor = '#f57777';
 
 			if(this.length - this.borderWidth - gradLength < 0) {
 				gradLength = this.length - this.borderWidth;
+			}
+
+			if(this.isFading) {
+				this.fadeStep += 0.05
+				endColor = ColorHelper.colorStep('#f57777', this.color, this.fadeStep);
+
+				if(this.fadeStep > 1) {
+					this.isFading = false;
+				}
 			}
 
 			if(gradLength > 0) {
 				var s = (this.getDirection() == 'v')? {x: p.x, y: p.y - gradLength * this.buildDirection} : {x: p.x - gradLength * this.buildDirection, y: p.y };
 				var g = context.createLinearGradient(s.x, s.y, p.x, p.y);
 				g.addColorStop(0.0, this.color);
-				g.addColorStop(1.0, '#f57777');
+				g.addColorStop(1.0, endColor);
 				style = g;
 			}
 
@@ -458,7 +477,7 @@ var Wall = new Class({
 			var wall = walls[i];
 
 			if(wall.getDirection() != this.getDirection()) {
-				if(wall.inBounds(endPoint) && wall.distance(endPoint) < 5) {
+				if(wall.inBounds(endPoint) && wall.distance(endPoint) <= this.width /2) {
 					result = true;
 					break;
 				}
@@ -470,6 +489,7 @@ var Wall = new Class({
 
 	stopBuilding: function() {
 		this.isBuilding = false;
+		this.isFading = true;
 		return this;
 	},
 
@@ -497,7 +517,6 @@ var Wall = new Class({
 			var side2 = (this.y - ball2.y) / (this.y - ball2.y).abs();;
 			return side1 != side2;
 		}
-
 
 	},
 
@@ -545,3 +564,39 @@ var Wall = new Class({
 });
 
 
+Array.implement({
+
+  subtractArray: function(a) {
+    return this.addArray(a.map(function(item) { return -item; }));
+  },
+
+  addArray: function(a) {
+    if(typeOf(a) == 'array' && this.length == a.length) {
+      return this.map(function(item, i) {
+        return this[i] + a[i];
+      }.bind(this));
+    } else {
+      return this;
+    }
+  }
+
+});
+
+var ColorHelper = {
+  colorStep: function(c1, c2, ratio) {
+    ratio = ratio.limit(0, 1);
+    c1 = ColorHelper.normalizeColor(c1);
+    c2 = ColorHelper.normalizeColor(c2);
+    change = c2.subtractArray(c1).map(function(i) { return i * ratio; });
+    result = c1.addArray(change).map(function(i) {return i.round(); });
+    return result.rgbToHex();
+  },
+
+  normalizeColor: function(c) {
+    if(typeOf(c) == 'array') {
+      return c;
+    } else if(typeOf(c) == 'string') {
+      return c.hexToRgb(true);
+    }
+  }
+}
