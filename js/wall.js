@@ -73,10 +73,6 @@ var Game = new Class({
 
 	},
 
-	stop: function() {
-		this.mainCanvas.stop();
-	},
-
 	resetBoard: function() {
 		this.walls.each(function(w) {
 			w.stopRendering();
