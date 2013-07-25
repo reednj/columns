@@ -1,7 +1,8 @@
 
 var GameOptions = {
 	borderWidth: 20,
-	wallWidth: 20
+	wallWidth: 20,
+	hintSize: 20
 };
 
 var Game = new Class({
@@ -9,30 +10,70 @@ var Game = new Class({
 		this.options = options || {};
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: true, onRedraw: this.update.bind(this)});
 		this.canvas = this.mainCanvas.canvas;
+
 		this.borderWidth = GameOptions.borderWidth || 0;
 		this.wallWidth = GameOptions.wallWidth || this.borderWidth || 10;
 
+		this.level = 1;
 		this.walls = [];
 		this.balls = [];
 		this.board = new GameBoard();
 
-		for(var i=0; i < 4; i++) {
-			this.addBall(this.canvas.width / 2, this.canvas.height / 2);
-		}
+
 
 		this.mainCanvas.add(this.board);
 		this.mainCanvas.start();
 
+		this.initEvents();
+		this.startLevel();
+	},
+
+	initEvents: function() {
 		this.mainCanvas.canvas.addEvent('click', function(e) {
 			var x = e.client.x - this.mainCanvas.canvas.offsetLeft;
 			var y = e.client.y - this.mainCanvas.canvas.offsetTop;
 			this.addWall(x, y);
 		}.bind(this));
 
+		this.mainCanvas.canvas.addEvent('mousemove', function(e) {
+
+			var x = e.client.x - this.mainCanvas.canvas.offsetLeft;
+			var y = e.client.y - this.mainCanvas.canvas.offsetTop;
+
+			if(this.board.isBorder(x, y, 40)) {
+				this.board.showHint(x, y);
+			} else {
+				this.board.hideHint();
+			}
+		}.bind(this));
+
+		this.mainCanvas.canvas.addEvent('mouseout', function(){
+			this.board.hideHint();
+		}.bind(this));
 	},
 
 	stop: function() {
 		this.mainCanvas.stop();
+	},
+
+	resetBoard: function() {
+		this.walls.each(function(w) {
+			w.stopRendering();
+		});
+
+		this.balls.each(function(b) {
+			b.stopRendering();
+		});
+
+		this.walls = [];
+		this.balls = [];
+	},
+
+	startLevel: function() {
+
+		for(var i=0; i < this.level + 1; i++) {
+			this.addBall(this.canvas.width / 2, this.canvas.height / 2);
+		}
 	},
 
 	addWall: function(x, y) {
@@ -171,13 +212,19 @@ var Game = new Class({
 		var levelComplete = this.areBallsSeparate();
 
 		if(levelComplete) {
-			alert('finished!');
+			this.levelUp();
 		}
 	},
 
 	gameOverHit: function(ball, wall) {
-		alert('game over');
-	}
+		this.resetBoard();
+	},
+
+	levelUp: function() {
+		this.level++;
+		this.resetBoard();
+		this.startLevel();
+	},
 
 
 });
@@ -187,12 +234,66 @@ var GameBoard = new Class({
 		this.options = options || {};
 		this.borderWidth = this.options.borderWidth || GameOptions.borderWidth;
 		this.borderColor = '#222';
+		this.canvas = this.options.canvas || $('main-canvas');
+		this.wallHint = {x: 0, y: 0, width: 20, height: 20, visible: false };
 	},
 
 	render: function(context, canvas) {
 		context.strokeStyle = this.borderColor;
 		context.lineWidth = this.borderWidth;
 		context.strokeRect(this.borderWidth/2, this.borderWidth/2, canvas.width - this.borderWidth, canvas.height - this.borderWidth);
+
+		if(this.wallHint.visible) {
+			context.fillStyle = this.borderColor;
+			context.fillRect(this.wallHint.x, this.wallHint.y, this.wallHint.width, this.wallHint.height);
+		}
+	},
+
+	isBorder: function(x, y, width) {
+		width = width || this.borderWidth;
+
+		return x <= width ||
+			x >= this.canvas.width - width ||
+			y <= width ||
+			y >= this.canvas.height - width;
+	},
+
+	normalizeHintBox: function(mouseX, mouseY) {
+		var x = 0;
+		var y = 0;
+		var width = 20;
+		var height = 20;
+
+		if(mouseX <= this.borderWidth + width) {
+			y = mouseY - width/2;
+			x = this.borderWidth
+		} else if(mouseX >= this.canvas.width - this.borderWidth - width) {
+			y = mouseY - width / 2;
+			x = this.canvas.width - this.borderWidth - width;
+		} else if(mouseY <= this.borderWidth + height) {
+			y = this.borderWidth;
+			x = mouseX - width/2;
+		} else if(mouseY >= this.canvas.height - this.borderWidth - height) {
+			y = this.canvas.height - this.borderWidth - height;
+			x = mouseX - width/2;
+		} else {
+			return null;
+		}
+
+		return {x: x, y: y };
+	},
+
+	showHint: function(x, y) {
+		var h = this.normalizeHintBox(x, y);
+		this.wallHint.x = h.x;
+		this.wallHint.y = h.y;
+		this.wallHint.visible = true;
+		return this;
+	},
+
+	hideHint: function() {
+		this.wallHint.visible = false;
+		return this;
 	}
 });
 
@@ -277,8 +378,10 @@ var Wall = new Class({
 
 		this.canvas = this.options.canvas || $('main-canvas') || document.getElement('canvas');
 
+		this.renderingFinished = false;
+
 		if(this.isBuilding) {
-			this.length = GameOptions.borderWidth || 0;
+			this.length = GameOptions.borderWidth + 20 || 0;
 		}
 	},
 
@@ -298,7 +401,7 @@ var Wall = new Class({
 				var s = (this.getDirection() == 'v')? {x: p.x, y: p.y - gradLength * this.buildDirection} : {x: p.x - gradLength * this.buildDirection, y: p.y };
 				var g = context.createLinearGradient(s.x, s.y, p.x, p.y);
 				g.addColorStop(0.0, this.color);
-				g.addColorStop(1.0, 'rgba(255, 0, 0, 0.5)');
+				g.addColorStop(1.0, '#f57777');
 				style = g;
 			}
 
@@ -311,6 +414,11 @@ var Wall = new Class({
 		context.moveTo(this.x, this.y);
 		context.lineTo(p.x, p.y);
 		context.stroke();
+	},
+
+	stopRendering: function() {
+		this.renderingFinished = true;
+		return this;
 	},
 
 	build: function() {
