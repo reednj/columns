@@ -20,6 +20,9 @@ var Game = new Class({
 
 	},
 
+	setCell: function() {
+	},
+
 	initEvents: function() {
 		this.dg = new DraggableCanvas(this.canvas, {
 
