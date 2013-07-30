@@ -1,86 +1,10 @@
-@footer-size: 80px;
-@default-border: 1px solid #ccc;
 
-/* sticky footer stuff */
-html, body {
-	height: 100%;
-}
-
-#wrapper {
-	min-height: 100%;
-	height: auto !important;
-	height: 100%;
-	margin: 0 auto -@footer-size;
-}
-
-#footer, #push {
-	height: @footer-size;
-}
-
-/* info footer at the bottom of the page*/
-
-#footer {
-	background-color: #333;
-
-	.content {
-		border-top: 8px solid #666;
-		color: gray;
-		font-size: 10pt;
-		padding: 8px 16px;
-		text-align: left;
-	}
-
-	.logo, .me {
-		float: left;
-	}
-
-	.logo {
-		margin-right: 8px;
-		img {
-			height: 50px;
-		}
-	}
-
-	.me {
-		margin-top: 8px;
-	}
-}
-
-/* main game board */
-a {
-	color: gray;
-	text-decoration: none;
-	font-weight: bold;
-
-	&:hover {
-		text-decoration: underline;
-	}
+div.viewport {
+	border: 1px solid #ccc;
+	height: 500px;
+	width: 600px;
 }
 
 body {
 	background: #eee;
 }
-
-.game {
-	width: 650px;
-	margin: 0 auto;
-	padding-top: 96px;
-}
-
-div.viewport {
-	border: @default-border;
-	float: left;
-	margin-left: 16px;
-	height: 500px;
-	width: 600px;
-
-	canvas {
-		position: absolute;
-
-		&#main-canvas {	z-index : 2; }
-		&#back-canvas {	z-index : 1; }
-	}
-}
-
-
-
