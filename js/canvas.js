@@ -77,6 +77,7 @@ var CanvasHelper = new Class({
 		this.element = $(element);
 		this.options = options || {};
 		this.tick = 0;
+		this.waitingForFrame = false;
 
 		this.options.autoRedraw = this.options.autoRedraw === false? false : true;
 		this.options.onRedraw = this.options.onRedraw || function() {};
@@ -94,7 +95,13 @@ var CanvasHelper = new Class({
 	},
 
 	refresh: function() {
-		requestAnimationFrame(this.redraw.bind(this));
+		if(this.waitingForFrame === false) {
+			requestAnimationFrame(this.redraw.bind(this));
+
+			// the waiting for frame flag makes sure that the frame will only be redrawn once
+			// if mulitple requests are made on the same canvas before it gets a chance to draw
+			this.waitingForFrame = true;
+		}
 		return this;
  	},
 
@@ -105,6 +112,8 @@ var CanvasHelper = new Class({
 
 	redraw: function() {
 		this.tick++;
+		this.waitingForFrame = false;
+
 		this.clear();
 
 		// call the redraw event, so that the position of objects etc can be updated
