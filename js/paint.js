@@ -61,7 +61,6 @@ var CanvasGrid = new Class({
 		this.isDragging = false;
 
 		this.canvas.addEvent('click', function(e) {
-			//alert(this.isDragging);
 			if(this.isDragging == true) {
 				this.isDragging = false;
 				return;
@@ -109,8 +108,21 @@ var CanvasGrid = new Class({
 		context.save();
 		context.translate(this.offset.x + this.gridOrigin.x % this.squareSize, this.offset.y + this.gridOrigin.y % this.squareSize);
 
-		for(var gx=this.topLeft.gx - 1; gx < this.topLeft.gx + this.columns + 1; gx++) {
-			for(var gy = this.topLeft.gy - 1; gy < this.topLeft.gy + this.rows + 1; gy++) {
+		// calculate the offset in grid squares so that we can render the grid properly
+		// while actually dragging. This involves rendering a slightly bigger canvas, but
+		// oh well
+		var offset = {
+			gx: (this.offset.x / this.squareSize).floor(),
+			gy: (this.offset.y / this.squareSize).floor()
+		};
+
+		var renderStart = {
+			gx: this.topLeft.gx - offset.gx,
+			gy: this.topLeft.gy - offset.gy
+		};
+
+		for(var gx=renderStart.gx - 1; gx < renderStart.gx + this.columns + 1; gx++) {
+			for(var gy = renderStart.gy - 1; gy < renderStart.gy + this.rows + 1; gy++) {
 				if(!this.getCell(gx, gy)) {
 					continue;
 				}
