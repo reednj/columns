@@ -28,7 +28,7 @@ var Game = new Class({
 		new Request.JSON({
 			url: 'api/getcells.php',
 			onSuccess: function(response) {
-				if(response.result != 'ok' || !response.data) {
+				if(response.result != 'ok') {
 					alert('data load failed');
 					return;
 				}
