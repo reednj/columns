@@ -369,6 +369,7 @@ var DraggableCanvas = new Class({
 
 		this.element.addEvent('mousedown', function(e) {
 			if(!this.isDragging) {
+				this.startPos = this.getLocalCoords(e.client.x, e.client.y);
 				this.isDragging = true;
 			}
 		}.bind(this));
@@ -400,7 +401,6 @@ var DraggableCanvas = new Class({
 	},
 
 	onDragStart: function(e) {
-		this.startPos = this.getLocalCoords(e.client.x, e.client.y);
 		e.dragStart = this.startPos;
 		this.options.onDragStart(e);
 	},

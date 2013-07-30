@@ -8,19 +8,47 @@ var Game = new Class({
 
 		this.grid = new CanvasGrid({
 			squareSize: this.squareSize,
-			onCellSet: function() {
+			onCellSet: function(gx, gy, color) {
+				this.setCell(gx, gy, color);
 				this.mainCanvas.refresh();
 			}.bind(this)
 		});
 
 		this.mainCanvas.add(this.grid);
-		this.mainCanvas.refresh();
 
 		this.initEvents();
+		this.loadCells();
+
+		this.mainCanvas.refresh();
 
 	},
 
-	setCell: function() {
+	loadCells: function() {
+		var range = {sx: -100, sy: -100, ex: 100, ey: 100};
+		new Request.JSON({
+			url: 'api/getcells.php',
+			onSuccess: function(response) {
+				if(response.result != 'ok' || !response.data) {
+					alert('data load failed');
+					return;
+				}
+
+				response.data.each(function(cell) {
+					this.grid.setCell(cell.x, cell.y, cell.color);
+				}.bind(this));
+
+				this.mainCanvas.refresh();
+
+			}.bind(this)
+		}).get(range);
+	},
+
+	setCell: function(gx, gy, color) {
+		var data = {x: gx, y: gy, color: color};
+
+		new Request.JSON({
+			'url': 'api/setcell.php'
+		}).get(data);
 	},
 
 	initEvents: function() {
@@ -77,7 +105,7 @@ var CanvasGrid = new Class({
 
 			var c = this.getCanvasCoords(e.client.x, e.client.y);
 			var g = this.toGrid(c.x, c.y);
-			this.setCell(g.gx, g.gy);
+			this.setCell(g.gx, g.gy, '#222', true);
 
 		}.bind(this));
 	},
@@ -86,9 +114,13 @@ var CanvasGrid = new Class({
 		return this.data[this.getCellID(gx, gy)];
 	},
 
-	setCell: function(gx, gy, color) {
-		this.data[this.getCellID(gx, gy)] = color || '#222';
-		this.options.onCellSet(gx, gy, color);
+	setCell: function(gx, gy, color, withEvents) {
+		color = color || '#222'
+		this.data[this.getCellID(gx, gy)] = color;
+
+		if(withEvents === true) {
+			this.options.onCellSet(gx, gy, color);
+		}
 	},
 
 	getCellID: function(gx, gy) {
