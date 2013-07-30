@@ -28,6 +28,12 @@ var Game = new Class({
 			}.bind(this),
 
 			onDragEnd: function(e) {
+				// for small moves we want to set the isdragging thing
+				// to false, so that the click event is not supressed
+				if((e.dragStart.x - e.dragEnd.x).abs() <= 5 && (e.dragStart.x - e.dragEnd.x).abs() <= 5) {
+					this.grid.isDragging = false;
+				}
+
 				this.grid.resetOrigin();
 				this.mainCanvas.refresh();
 			}.bind(this),
