@@ -22,6 +22,11 @@ var Game = new Class({
 
 	initEvents: function() {
 		this.dg = new DraggableCanvas(this.canvas, {
+
+			onDragStart: function() {
+				this.grid.isDragging = true;
+			}.bind(this),
+
 			onDragEnd: function(e) {
 				this.grid.resetOrigin();
 				this.mainCanvas.refresh();
@@ -51,13 +56,21 @@ var CanvasGrid = new Class({
 		this.offset = {x: 0, y: 0};
 		this.gridOrigin = {x:0,y:0};
 		this.topLeft = this.toGrid(0, 0);
-
 		this.options.onCellSet = this.options.onCellSet || function() {};
 
+		this.isDragging = false;
+
 		this.canvas.addEvent('click', function(e) {
+			//alert(this.isDragging);
+			if(this.isDragging == true) {
+				this.isDragging = false;
+				return;
+			}
+
 			var c = this.getCanvasCoords(e.client.x, e.client.y);
 			var g = this.toGrid(c.x, c.y);
 			this.setCell(g.gx, g.gy);
+
 		}.bind(this));
 	},
 

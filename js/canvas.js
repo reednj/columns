@@ -356,7 +356,11 @@ var DraggableCanvas = new Class({
 		this.options = options || {};
 		var emptyFn = function() {};
 
+		// isDragging means the button has been clicked, draggingStarted means
+		// it has actually moved. The dragstart event doesn't trigger until
+		// there is actual movement
 		this.isDragging = false;
+		this.draggingStarted = false;
 		this.startPos = null;
 
 		this.options.onDragStart = this.options.onDragStart || emptyFn;
@@ -366,12 +370,16 @@ var DraggableCanvas = new Class({
 		this.element.addEvent('mousedown', function(e) {
 			if(!this.isDragging) {
 				this.isDragging = true;
-				this.onDragStart(e);
 			}
 		}.bind(this));
 
 		this.element.addEvent('mousemove', function(e) {
 			if(this.isDragging) {
+				if(!this.draggingStarted) {
+					this.draggingStarted = true;
+					this.onDragStart(e);
+				}
+
 				this.onDragging(e);
 			}
 		}.bind(this));
@@ -381,6 +389,9 @@ var DraggableCanvas = new Class({
 				this.isDragging = false;
 				this.onDragEnd(e);
 				this.startPos = null;
+				this.draggingStarted = false;
+
+				e.stop();
 			}
 		}.bind(this);
 
