@@ -4,7 +4,7 @@ var Game = new Class({
 	initialize: function() {
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: false});
 		this.canvas = this.mainCanvas.canvas;
-		this.squareSize = 30;
+		this.squareSize = 20;
 
 		this.grid = new CanvasGrid({
 			squareSize: this.squareSize,
