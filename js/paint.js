@@ -12,6 +12,17 @@ var Game = new Class({
 			onCellSet: function(gx, gy, color) {
 				this.setCell(gx, gy, color);
 				this.mainCanvas.refresh();
+			}.bind(this),
+
+			onDataRequired: function(sectionGrid) {
+				var range = {
+					sx: sectionGrid.gx,
+					sy: sectionGrid.gy,
+					ex: sectionGrid.gx + sectionGrid.width,
+					ey: sectionGrid.gy + sectionGrid.height
+				};
+
+				this.loadCells(range);
 			}.bind(this)
 		});
 
@@ -22,16 +33,23 @@ var Game = new Class({
 			ey: this.grid.topLeft.gy + this.grid.rows
 		}
 
-		this.mainCanvas.add(this.grid);
+
 		this.initEvents();
+
+		// we are about to load the initial page of data. Be sure to mark
+		// it as loaded on the grid, so it doesn't try to get it again.
+		this.grid.setSectionLoaded(0,0);
 		this.loadCells(initialRange);
 
+		this.mainCanvas.add(this.grid);
 		this.mainCanvas.refresh();
 
 	},
 
 	loadCells: function(range) {
-		range = range || {sx: -20, sy: -20, ex: 100, ey: 100};
+		if(!range) {
+			return;
+		}
 
 		new Request.JSON({
 			url: 'api/getcells.php',
@@ -41,7 +59,7 @@ var Game = new Class({
 					return;
 				}
 
-				response.data.each(function(cell) {
+				(response.data || []).each(function(cell) {
 					this.grid.setCell(cell.x, cell.y, cell.color);
 				}.bind(this));
 
@@ -111,6 +129,11 @@ var CanvasGrid = new Class({
 		this.gridOrigin = this.options.initialPosition || {x:0, y:0};
 		this.topLeft = this.toGrid(0, 0);
 		this.options.onCellSet = this.options.onCellSet || function() {};
+		this.options.onDataRequired = this.options.onDataRequired || function() {};
+
+		// the section size is in grid squares, not px
+		this.sectionSize = 10;
+		this.sections = {};
 
 		this.isDragging = false;
 
@@ -144,6 +167,45 @@ var CanvasGrid = new Class({
 		return gx.toString(16) + '-' + gy.toString(16);
 	},
 
+	getSectionID: function(sx, sy) {
+		// for the moment the section ids are generated in exactly the same way as the
+		// cell ids
+		return this.getCellID(sx, sy);
+	},
+
+	isSectionLoaded: function(sx, sy) {
+		return this.sections[this.getSectionID(sx, sy)] === true;
+	},
+
+	setSectionLoaded: function(sx, sy) {
+		this.sections[this.getSectionID(sx, sy)] = true;
+		return this;
+	},
+
+	dataRequiredFor: function() {
+		// check if any part of the view port sits in a section we don't have data for
+		// returns a list of section sx/sy objects
+		var cornerList = [
+			this.topLeft,
+			{gx: this.topLeft.gx + this.columns, gy: this.topLeft.gy},
+			{gx: this.topLeft.gx, gy: this.topLeft.gy + this.rows},
+			{gx: this.topLeft.gx + this.columns, gy: this.topLeft.gy + this.rows}
+		];
+
+		var sectionList = {};
+		cornerList.each(function(corner) {
+			var section = this.gridToSection(corner.gx, corner.gy);
+			if(!this.isSectionLoaded(section.sx, section.sy)) {
+				// yes, this will involve overwriting the same section mulitple times
+				// probably, but I don't really care. It is the easiest way to get
+				// a unique list of sections later on
+				sectionList[this.getSectionID(section.sx, section.sy)] = section;
+			}
+		}.bind(this));
+
+		return Object.values(sectionList);
+	},
+
 	// transfer the offset information into the origin, and start rendering
 	// from that point again, instead of translating the entire grid
 	resetOrigin: function() {
@@ -154,6 +216,20 @@ var CanvasGrid = new Class({
 
 		this.offset = {x: 0, y: 0};
 		this.topLeft = this.toGrid();
+
+		// now we need to check here if we need more data.
+		this.dataRequiredFor().each(function(section) {
+			var sectionGrid = this.sectionToGrid(section.sx, section.sy);
+			this.options.onDataRequired(sectionGrid);
+
+			// we are actually only flagging here that the load has been requested
+			// not that the data has actually been set. Maybe this will cause problems
+			// in the future, but it is ok for now. If it causes problems, we can always
+			// change the this.sections hash so that is stores state, not just true/undef
+			this.setSectionLoaded(section.sx, section.sy);
+
+			console.log('loading section: [' + section.sx + ', ' + section.sy + ']');
+		}.bind(this));
 	},
 
 	setOffset: function(x, y) {
@@ -249,6 +325,22 @@ var CanvasGrid = new Class({
 			x: clientX - this.canvas.offsetLeft,
 			y: clientY - this.canvas.offsetTop
 		};
+	},
+
+	sectionToGrid: function(sx, sy) {
+		return {
+			gx: sx * this.sectionSize,
+			gy: sy * this.sectionSize,
+			width: this.sectionSize,
+			height: this.sectionSize
+		};
+	},
+
+	gridToSection: function(gx, gy) {
+		return {
+			sx: (gx / this.sectionSize).floor(),
+			sy: (gy / this.sectionSize).floor()
+		}
 	}
 
 });
