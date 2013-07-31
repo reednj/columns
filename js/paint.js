@@ -1,4 +1,98 @@
+Array.implement({
+	// returns the first element where fn(elem) === true
+	// if no function, then just return the first item in the
+	// array;
+	getFirst: function(fn) {
+		if(!fn || typeOf(fn) != 'function') {
+			return this[0];
+		}
 
+		var result = null;
+
+		for(var i=0; i < this.length; i++) {
+			if(fn(this[i]) === true) {
+				result = this[i];
+				break;
+			}
+		}
+
+		return result;
+	}
+});
+
+var PalettePicker = new Class({
+	initialize: function(element, options) {
+		this.element = $(element);
+		this.options = options || {};
+		this.options.colors = this.options.colors || ['#f00', '#0f0', '#00f'];
+		this.options.onSelect = this.options.onSelect || function() {};
+
+		this.initElement();
+		this.setColor(this.options.colors[0]);
+	},
+
+	initElement: function() {
+		this.options.colors.each(function(c) {
+			new Element('span', {
+				'data-color': c,
+				styles: {
+					backgroundColor: c
+				},
+				events: {
+					click: function(e) {
+						this.onSelect(e.target);
+					}.bind(this)
+				}
+			}).inject(this.element);
+		}.bind(this));
+	},
+
+	onSelect: function(elem) {
+		if(elem && elem.get('data-color')) {
+			this.setColor(elem);
+			this.options.onSelect(elem.get('data-color'));
+		}
+	},
+
+	setColor: function(color) {
+		var colorElement;
+
+		if(!color) {
+			return;
+		}
+
+		if(typeOf(color) == 'string') {
+			color = color.toLowerCase();
+			colorElement = this.element.getElements('span').getFirst(function(elem) {
+				return elem.get('data-color') == color;
+			});
+		} else if(typeOf(color) == 'element') {
+			colorElement = color;
+		}
+
+		if(colorElement) {
+
+			var selected = this.element.getElement('.selected');
+			if(selected) {
+				selected.removeClass('selected');
+			}
+
+			colorElement.addClass('selected');
+		}
+	},
+
+	getColor: function() {
+		var result = null;
+		var selected = this.element.getElement('.selected');
+
+		if(selected && selected.get('data-color')) {
+			result = selected.get('data-color');
+		}
+
+		return result;
+	}
+
+});
 
 var Game = new Class({
 	initialize: function() {
