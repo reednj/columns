@@ -8,6 +8,7 @@ var Game = new Class({
 
 		this.grid = new CanvasGrid({
 			squareSize: this.squareSize,
+			initialPosition: this.loadLocation(),
 			onCellSet: function(gx, gy, color) {
 				this.setCell(gx, gy, color);
 				this.mainCanvas.refresh();
@@ -15,7 +16,6 @@ var Game = new Class({
 		});
 
 		this.mainCanvas.add(this.grid);
-
 		this.initEvents();
 		this.loadCells();
 
@@ -23,8 +23,9 @@ var Game = new Class({
 
 	},
 
-	loadCells: function() {
-		var range = {sx: -100, sy: -100, ex: 100, ey: 100};
+	loadCells: function(range) {
+		range = range || {sx: -100, sy: -100, ex: 100, ey: 100};
+
 		new Request.JSON({
 			url: 'api/getcells.php',
 			onSuccess: function(response) {
@@ -66,6 +67,7 @@ var Game = new Class({
 				}
 
 				this.grid.resetOrigin();
+				this.saveLocation();
 				this.mainCanvas.refresh();
 			}.bind(this),
 
@@ -77,6 +79,14 @@ var Game = new Class({
 				this.mainCanvas.refresh();
 			}.bind(this)
 		});
+	},
+
+	saveLocation: function() {
+		Cookie.write('location', JSON.encode(this.grid.gridOrigin), {duration: 128});
+	},
+
+	loadLocation: function() {
+		return JSON.decode(Cookie.read('location') || 'null')
 	}
 
 });
@@ -91,7 +101,7 @@ var CanvasGrid = new Class({
 
 		this.data = {};
 		this.offset = {x: 0, y: 0};
-		this.gridOrigin = {x:0,y:0};
+		this.gridOrigin = this.options.initialPosition || {x:0, y:0};
 		this.topLeft = this.toGrid(0, 0);
 		this.options.onCellSet = this.options.onCellSet || function() {};
 
