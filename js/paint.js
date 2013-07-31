@@ -26,23 +26,12 @@ var Game = new Class({
 			}.bind(this)
 		});
 
-		var initialRange = {
-			sx: this.grid.topLeft.gx,
-			sy: this.grid.topLeft.gy,
-			ex: this.grid.topLeft.gx + this.grid.columns,
-			ey: this.grid.topLeft.gy + this.grid.rows
-		}
-
-
 		this.initEvents();
-
-		// we are about to load the initial page of data. Be sure to mark
-		// it as loaded on the grid, so it doesn't try to get it again.
-		this.grid.setSectionLoaded(0,0);
-		this.loadCells(initialRange);
 
 		this.mainCanvas.add(this.grid);
 		this.mainCanvas.refresh();
+
+		this.grid.loadInitialData();
 
 	},
 
@@ -132,7 +121,7 @@ var CanvasGrid = new Class({
 		this.options.onDataRequired = this.options.onDataRequired || function() {};
 
 		// the section size is in grid squares, not px
-		this.sectionSize = 10;
+		this.sectionSize = 100;
 		this.sections = {};
 
 		this.isDragging = false;
@@ -148,6 +137,10 @@ var CanvasGrid = new Class({
 			this.setCell(g.gx, g.gy, '#222', true);
 
 		}.bind(this));
+	},
+
+	loadInitialData: function() {
+		this.requestRequiredData();
 	},
 
 	getCell: function(gx, gy) {
@@ -182,6 +175,36 @@ var CanvasGrid = new Class({
 		return this;
 	},
 
+	// transfer the offset information into the origin, and start rendering
+	// from that point again, instead of translating the entire grid
+	resetOrigin: function() {
+		this.gridOrigin = {
+			x: this.offset.x + this.gridOrigin.x,
+			y: this.offset.y + this.gridOrigin.y
+		};
+
+		this.offset = {x: 0, y: 0};
+		this.topLeft = this.toGrid();
+
+		this.requestRequiredData();
+	},
+
+	requestRequiredData: function() {
+		// now we need to check here if we need more data.
+		this.dataRequiredFor().each(function(section) {
+			var sectionGrid = this.sectionToGrid(section.sx, section.sy);
+			this.options.onDataRequired(sectionGrid);
+
+			// we are actually only flagging here that the load has been requested
+			// not that the data has actually been set. Maybe this will cause problems
+			// in the future, but it is ok for now. If it causes problems, we can always
+			// change the this.sections hash so that is stores state, not just true/undef
+			this.setSectionLoaded(section.sx, section.sy);
+			console.log('loading section: [' + section.sx + ', ' + section.sy + ']');
+		}.bind(this));
+
+	},
+
 	dataRequiredFor: function() {
 		// check if any part of the view port sits in a section we don't have data for
 		// returns a list of section sx/sy objects
@@ -204,32 +227,6 @@ var CanvasGrid = new Class({
 		}.bind(this));
 
 		return Object.values(sectionList);
-	},
-
-	// transfer the offset information into the origin, and start rendering
-	// from that point again, instead of translating the entire grid
-	resetOrigin: function() {
-		this.gridOrigin = {
-			x: this.offset.x + this.gridOrigin.x,
-			y: this.offset.y + this.gridOrigin.y
-		};
-
-		this.offset = {x: 0, y: 0};
-		this.topLeft = this.toGrid();
-
-		// now we need to check here if we need more data.
-		this.dataRequiredFor().each(function(section) {
-			var sectionGrid = this.sectionToGrid(section.sx, section.sy);
-			this.options.onDataRequired(sectionGrid);
-
-			// we are actually only flagging here that the load has been requested
-			// not that the data has actually been set. Maybe this will cause problems
-			// in the future, but it is ok for now. If it causes problems, we can always
-			// change the this.sections hash so that is stores state, not just true/undef
-			this.setSectionLoaded(section.sx, section.sy);
-
-			console.log('loading section: [' + section.sx + ', ' + section.sy + ']');
-		}.bind(this));
 	},
 
 	setOffset: function(x, y) {
@@ -329,8 +326,8 @@ var CanvasGrid = new Class({
 
 	sectionToGrid: function(sx, sy) {
 		return {
-			gx: sx * this.sectionSize,
-			gy: sy * this.sectionSize,
+			gx: sx * this.sectionSize - this.sectionSize / 2,
+			gy: sy * this.sectionSize - this.sectionSize / 2,
 			width: this.sectionSize,
 			height: this.sectionSize
 		};
@@ -338,8 +335,8 @@ var CanvasGrid = new Class({
 
 	gridToSection: function(gx, gy) {
 		return {
-			sx: (gx / this.sectionSize).floor(),
-			sy: (gy / this.sectionSize).floor()
+			sx: ((gx + this.sectionSize / 2) / this.sectionSize).floor(),
+			sy: ((gy + this.sectionSize / 2) / this.sectionSize).floor()
 		}
 	}
 
