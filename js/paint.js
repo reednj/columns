@@ -104,6 +104,11 @@ var Game = new Class({
 
 		// set up the color picker
 		var p = new PalettePicker('picker', {
+			colors:  [
+				"#FFFF88", "#FF7400",
+				"#6BBA70", "#006E2E", "#C3D9FF", "#4096EE",
+				"#356AA0", "#FFFFFF", "#888", "#000000"
+			],
 			onSelect: function(color) {
 				this.grid.setColor(color);
 			}.bind(this)
