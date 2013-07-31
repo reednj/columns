@@ -15,7 +15,8 @@ Class Cells {
 
 		return ESQL::Select('cell', array(
 			'column_list' => array('x', 'y', 'color'),
-			'where' => "x >= '$sx' && y >= '$sy' && x <= '$ex' && y <= '$ey'"
+			'where' => "x >= '$sx' && y >= '$sy' && x <= '$ex' && y <= '$ey'",
+			'limit' => '20000'
 		));
 	}
 
