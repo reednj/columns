@@ -15,16 +15,23 @@ var Game = new Class({
 			}.bind(this)
 		});
 
+		var initialRange = {
+			sx: this.grid.topLeft.gx,
+			sy: this.grid.topLeft.gy,
+			ex: this.grid.topLeft.gx + this.grid.columns,
+			ey: this.grid.topLeft.gy + this.grid.rows
+		}
+
 		this.mainCanvas.add(this.grid);
 		this.initEvents();
-		this.loadCells();
+		this.loadCells(initialRange);
 
 		this.mainCanvas.refresh();
 
 	},
 
 	loadCells: function(range) {
-		range = range || {sx: -100, sy: -100, ex: 100, ey: 100};
+		range = range || {sx: -20, sy: -20, ex: 100, ey: 100};
 
 		new Request.JSON({
 			url: 'api/getcells.php',
