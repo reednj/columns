@@ -24,7 +24,7 @@ var PalettePicker = new Class({
 	initialize: function(element, options) {
 		this.element = $(element);
 		this.options = options || {};
-		this.options.colors = this.options.colors || ['#f00', '#0f0', '#00f'];
+		this.options.colors = this.options.colors || ['#000', '#222', '#444', '#666', '#888', '#aaa', '#ccc', '#ddd', '#fff'];
 		this.options.onSelect = this.options.onSelect || function() {};
 
 		this.initElement();
@@ -102,6 +102,14 @@ var Game = new Class({
 
 		this.setCanvasSize();
 
+		// set up the color picker
+		var p = new PalettePicker('picker', {
+			onSelect: function(color) {
+				this.grid.setColor(color);
+			}.bind(this)
+		});
+
+		// configure the main grid
 		this.grid = new CanvasGrid({
 			squareSize: this.squareSize,
 			initialPosition: this.loadLocation(),
@@ -233,6 +241,8 @@ var CanvasGrid = new Class({
 		this.options.onCellSet = this.options.onCellSet || function() {};
 		this.options.onDataRequired = this.options.onDataRequired || function() {};
 
+		this.currentColor = this.options.color || '#222';
+
 		// the section size is in grid squares, not px
 		this.sectionSize = 100;
 		this.sections = {};
@@ -247,13 +257,17 @@ var CanvasGrid = new Class({
 
 			var c = this.getCanvasCoords(e.client.x, e.client.y);
 			var g = this.toGrid(c.x, c.y);
-			this.setCell(g.gx, g.gy, '#222', true);
+			this.setCell(g.gx, g.gy, this.currentColor, true);
 
 		}.bind(this));
 	},
 
 	loadInitialData: function() {
 		this.requestRequiredData();
+	},
+
+	setColor: function(color) {
+		this.currentColor = color;
 	},
 
 	getCell: function(gx, gy) {
