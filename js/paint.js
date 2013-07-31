@@ -257,7 +257,11 @@ var CanvasGrid = new Class({
 
 			var c = this.getCanvasCoords(e.client.x, e.client.y);
 			var g = this.toGrid(c.x, c.y);
-			this.setCell(g.gx, g.gy, this.currentColor, true);
+
+
+			if(!this.getCell(g.gx, g.gy)) {
+				this.setCell(g.gx, g.gy, this.currentColor, true);
+			}
 
 		}.bind(this));
 	},
