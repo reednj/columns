@@ -6,6 +6,8 @@ var Game = new Class({
 		this.canvas = this.mainCanvas.canvas;
 		this.squareSize = 20;
 
+		this.setCanvasSize();
+
 		this.grid = new CanvasGrid({
 			squareSize: this.squareSize,
 			initialPosition: this.loadLocation(),
@@ -33,6 +35,23 @@ var Game = new Class({
 
 		this.grid.loadInitialData();
 
+	},
+
+	setCanvasSize: function(width, height) {
+		if(this.canvas) {
+			if(!width || !height) {
+				var footerHeight = 100;
+				var viewport = this.canvas.getParent('.viewport');
+				var viewPortHeight = window.innerHeight - footerHeight;
+
+				viewport.setStyle('height', viewPortHeight + 'px');
+				width = viewport.offsetWidth;
+				height = viewport.offsetHeight;
+			}
+
+			this.canvas.width = width;
+			this.canvas.height = height;
+		}
 	},
 
 	loadCells: function(range) {
