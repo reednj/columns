@@ -249,8 +249,8 @@ var CanvasGrid = new Class({
 		this.options = options || {};
 		this.squareSize = this.options.squareSize || 30;
 		this.canvas = $(this.options.canvas) || $('main-canvas');
-		this.rows = this.options.rows || this.canvas.height / this.squareSize;
-		this.columns = this.options.columns || this.canvas.width / this.squareSize;
+		this.rows = this.options.rows || (this.canvas.height / this.squareSize).floor();
+		this.columns = this.options.columns || (this.canvas.width / this.squareSize).floor();
 
 		this.data = {};
 		this.offset = {x: 0, y: 0};
