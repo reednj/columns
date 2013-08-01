@@ -114,6 +114,7 @@ var Game = new Class({
 
 		// configure the main grid
 		this.grid = new CanvasGrid({
+			debug: true,
 			squareSize: this.squareSize,
 			initialPosition: this.loadLocation(),
 			onCellSet: function(gx, gy, color) {
@@ -258,6 +259,7 @@ var CanvasGrid = new Class({
 		this.topLeft = this.toGrid(0, 0);
 		this.options.onCellSet = this.options.onCellSet || function() {};
 		this.options.onDataRequired = this.options.onDataRequired || function() {};
+		this.options.debug = (this.options.debug === true) ? true : false;
 
 		this.currentColor = this.options.color || '#222';
 
@@ -416,6 +418,13 @@ var CanvasGrid = new Class({
 		this.renderGridLines(context, canvas);
 
 		context.restore();
+
+		if(this.options.debug) {
+			context.fillStyle = '#888';
+			context.fillText(canvas.width + 'x' + canvas.height + 'px', 20, 20);
+			context.fillText(this.columns + 'x' + this.rows + 'sq', 20, 35);
+			context.fillText(this.topLeft.gx + ', ' + this.topLeft.gy, 20, 50);
+		}
 	},
 
 	renderGridLines: function(context, canvas) {
