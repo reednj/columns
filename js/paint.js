@@ -26,6 +26,9 @@ var PalettePicker = new Class({
 		this.options = options || {};
 		this.options.colors = this.options.colors || ['#000', '#222', '#444', '#666', '#888', '#aaa', '#ccc', '#ddd', '#fff'];
 		this.options.onSelect = this.options.onSelect || function() {};
+		this.options.previewElement = $(this.options.previewElement) || null;
+
+		this.selectedElement = null;
 
 		this.initElement();
 		this.setColor(this.options.colors[0]);
@@ -34,7 +37,7 @@ var PalettePicker = new Class({
 	initElement: function() {
 		this.options.colors.each(function(c) {
 			new Element('span', {
-				'data-color': c,
+				'data-color': c.toLowerCase(),
 				styles: {
 					backgroundColor: c
 				},
@@ -54,13 +57,17 @@ var PalettePicker = new Class({
 		}
 	},
 
+	// color can either be the color code, or it can be one of the span elements
+	// from the picker
 	setColor: function(color) {
-		var colorElement;
+		var colorElement = null;
 
 		if(!color) {
 			return;
 		}
 
+		// we want to normalize the 'arguments' here. At the end of this color should be the
+		// color string, and colorElement should be the span elem from the picker
 		if(typeOf(color) == 'string') {
 			color = color.toLowerCase();
 			colorElement = this.element.getElements('span').getFirst(function(elem) {
@@ -68,28 +75,28 @@ var PalettePicker = new Class({
 			});
 		} else if(typeOf(color) == 'element') {
 			colorElement = color;
+			color = colorElement.get('data-color');
 		}
 
 		if(colorElement) {
 
-			var selected = this.element.getElement('.selected');
-			if(selected) {
-				selected.removeClass('selected');
+			if(this.selectedElement) {
+				this.selectedElement.removeClass('selected');
+			}
+
+			if(this.options.previewElement) {
+				this.options.previewElement.setStyle('background-color', color);
 			}
 
 			colorElement.addClass('selected');
+			this.selectedElement = colorElement;
 		}
 	},
 
 	getColor: function() {
-		var result = null;
-		var selected = this.element.getElement('.selected');
-
-		if(selected && selected.get('data-color')) {
-			result = selected.get('data-color');
+		if(this.selectedElement) {
+			return this.selectedElement.get('data-color');
 		}
-
-		return result;
 	}
 
 });
@@ -102,18 +109,7 @@ var Game = new Class({
 
 		this.setCanvasSize();
 
-		// set up the color picker
-		var p = new PalettePicker('picker', {
-			colors:  [
-				"#FFFF88", "#FF7400",
-				"#6BBA70", "#006E2E", "#C3D9FF", "#4096EE",
-				"#356AA0", "#FFFFFF", "#888", "#000000"
-			],
-			onSelect: function(color) {
-				this.grid.setColor(color);
-				$('picker-preview').setStyle('background-color', color);
-			}.bind(this)
-		});
+
 
 		// configure the main grid
 		this.grid = new CanvasGrid({
@@ -133,6 +129,21 @@ var Game = new Class({
 				};
 
 				this.loadCells(range);
+			}.bind(this)
+		});
+
+		// set up the color picker
+		var p = new PalettePicker('picker', {
+			colors:  [
+				"#FFFF88", "#FF7400",
+				"#6BBA70", "#006E2E", "#C3D9FF", "#4096EE",
+				"#356AA0", "#FFFFFF", "#888", "#000000"
+			],
+			previewElement: 'picker-preview',
+			onSelect: function(color) {
+				if(this.grid) {
+					this.grid.setColor(color);
+				}
 			}.bind(this)
 		});
 
