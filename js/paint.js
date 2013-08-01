@@ -407,19 +407,19 @@ var CanvasGrid = new Class({
 
 	renderGridLines: function(context, canvas) {
 		var extra = 10;
-		context.strokeStyle = '#ccc';
+		context.strokeStyle = 'rgba(150, 150, 150, 0.5)';
 
 		for(var i=-extra; i < (canvas.height / this.squareSize) + extra; i++) {
 			context.beginPath();
-			context.moveTo(this.squareSize*-extra, i * this.squareSize);
-			context.lineTo(canvas.width + this.squareSize*extra, i * this.squareSize);
+			context.moveTo(this.squareSize*-extra, i * this.squareSize + 0.5);
+			context.lineTo(canvas.width + this.squareSize*extra, i * this.squareSize + 0.5);
 			context.stroke();
 		}
 
 		for(var i=-extra; i < (canvas.width / this.squareSize) + extra; i++) {
 			context.beginPath();
-			context.moveTo(i * this.squareSize,  this.squareSize*-extra);
-			context.lineTo( i * this.squareSize, canvas.height +  this.squareSize*extra);
+			context.moveTo(i * this.squareSize + 0.5,  this.squareSize*-extra);
+			context.lineTo( i * this.squareSize + 0.5, canvas.height +  this.squareSize*extra);
 			context.stroke();
 		}
 	},
