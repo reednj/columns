@@ -111,6 +111,7 @@ var Game = new Class({
 			],
 			onSelect: function(color) {
 				this.grid.setColor(color);
+				$('picker-preview').setStyle('background-color', color);
 			}.bind(this)
 		});
 
