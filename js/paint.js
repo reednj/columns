@@ -32,6 +32,7 @@ var PalettePicker = new Class({
 
 		this.initElement();
 		this.setColor(this.options.colors[0]);
+		this.options.onSelect(this.options.colors[0]);
 	},
 
 	initElement: function() {
