@@ -1,4 +1,3 @@
-
 require 'sinatra'
 require "sinatra/reloader" if development?
 require 'sequel'
@@ -6,6 +5,8 @@ require 'json'
 
 require './config/db'
 require './lib/simpledb'
+
+use Rack::Deflater
 
 get '/' do
 	redirect to('/columns')
