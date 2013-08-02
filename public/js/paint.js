@@ -181,7 +181,7 @@ var Game = new Class({
 		}
 
 		new Request.JSON({
-			url: 'api/getcells.php',
+			url: '/paint/api/cell',
 			onSuccess: function(response) {
 				if(response.result != 'ok') {
 					alert('data load failed');
@@ -202,7 +202,7 @@ var Game = new Class({
 		var data = {x: gx, y: gy, color: color};
 
 		new Request.JSON({
-			'url': 'api/setcell.php'
+			'url': '/paint/api/setcell'
 		}).get(data);
 	},
 
