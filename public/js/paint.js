@@ -27,12 +27,13 @@ var PalettePicker = new Class({
 		this.options.colors = this.options.colors || ['#000', '#222', '#444', '#666', '#888', '#aaa', '#ccc', '#ddd', '#fff'];
 		this.options.onSelect = this.options.onSelect || function() {};
 		this.options.previewElement = $(this.options.previewElement) || null;
+		this.options.initialColor = this.options.initialColor || this.options.colors[0] || '#000';
 
 		this.selectedElement = null;
 
 		this.initElement();
-		this.setColor(this.options.colors[0]);
-		this.options.onSelect(this.options.colors[0]);
+		this.setColor(this.options.initialColor);
+		this.options.onSelect(this.options.initialColor);
 	},
 
 	initElement: function() {
@@ -110,8 +111,6 @@ var Game = new Class({
 
 		this.setCanvasSize();
 
-
-
 		// configure the main grid
 		this.grid = new CanvasGrid({
 			debug: true,
@@ -136,15 +135,18 @@ var Game = new Class({
 
 		// set up the color picker
 		var p = new PalettePicker('picker', {
-			colors:  [
+			colors: [
+				"#356AA0","#4096EE","#C3D9FF",
 				"#FFFF88", "#FF7400",
-				"#6BBA70", "#006E2E", "#C3D9FF", "#4096EE",
-				"#356AA0", "#FFFFFF", "#888", "#000000"
+				"#6BBA70", "#006E2E", 
+				"#000000","#888","#FFFFFF"
 			],
+			initialColor: this.loadColor(),
 			previewElement: 'picker-preview',
 			onSelect: function(color) {
 				if(this.grid) {
 					this.grid.setColor(color);
+					this.saveColor(color);
 				}
 			}.bind(this)
 		});
@@ -233,6 +235,14 @@ var Game = new Class({
 				this.mainCanvas.refresh();
 			}.bind(this)
 		});
+	},
+
+	loadColor: function	(){
+		return JSON.decode(Cookie.read('color') || 'null')
+	},
+
+	saveColor: function(color) {
+		Cookie.write('color', JSON.encode(color), {duration: 128});
 	},
 
 	saveLocation: function() {
