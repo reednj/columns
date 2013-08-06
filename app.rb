@@ -38,16 +38,6 @@ get '/paint/api/ws' do
 	end
 end
 
-get '/paint/api/setcell' do
-
-	s = SimpleDb.new
-	if s.db[:cell].where(:x => params[:x], :y => params[:y]).count == 0
-		s.db[:cell].insert(:x => params[:x].to_i, :y => params[:y].to_i, :color => params[:color])
-	end
-
-	return 200
-end
-
 get '/paint/api/cell' do
 	content_type 'application/json'
 

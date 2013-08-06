@@ -13,9 +13,9 @@ class WebSocketHelper
 		@ws.onopen { self.on_open }
 		@ws.onclose { self.on_close }
 		@ws.onmessage { |msg|
-			d = JSON.parse(msg)
-			if d != nil && d['event'] != nil
-				self.on_message(d['event'], d['data'])
+			d = JSON.parse(msg, {:symbolize_names => true})
+			if d != nil && d[:event] != nil
+				self.on_message(d[:event], d[:data])
 			end
 		 }
 	end

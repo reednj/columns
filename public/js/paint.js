@@ -206,6 +206,9 @@ var Game = new Class({
 			onOpen: function() {
 				console.log('websocket connected')
 			},
+			onClose: function() {
+				console.log('websocket disconnected')
+			},
 			onSetCell: function(cell) {
 				console.log('cell update from server: [' + cell.x + ', ' + cell.y + ', ' + cell.color +']');
 				this.grid.setCell(cell.x, cell.y, cell.color);
@@ -256,10 +259,7 @@ var Game = new Class({
 
 	setCell: function(gx, gy, color) {
 		var data = {x: gx, y: gy, color: color};
-
-		new Request.JSON({
-			'url': '/paint/api/setcell'
-		}).get(data);
+		this.gameSocket.send('setCell', data);
 	},
 
 	initEvents: function() {
