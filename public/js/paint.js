@@ -20,6 +20,48 @@ Array.implement({
 	}
 });
 
+var JSONSocket = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.options.url = this.options.url || null;
+		this.options.onOpen = this.options.onOpen || function() {};
+		this.options.onClose = this.options.onClose || function() {};
+		
+		this.ws = new WebSocket(this.options.url);
+		this.ws.onopen = this.onOpen.bind(this)
+		this.ws.onclose = this.onClose.bind(this);
+		this.ws.onmessage = function(e) {
+			this.onMessage(JSON.decode(e.data));
+		}.bind(this);
+	},
+	
+	onOpen: function() {
+		this.options.onOpen(this, this.ws);
+	},
+	
+	onClose: function() {
+		this.options.onClose(this, this.ws);
+	},
+	
+	onMessage: function(msg) {
+		if(msg.event && typeOf(msg.event) == 'string') {
+			(this.eventNameToFunction(msg.event))(msg.data);
+		}
+	},
+	
+	send: function(eventType, data) {
+		var str = JSON.encode({event: eventType, data: data})
+		this.ws.send(str);
+	},
+
+	eventNameToFunction: function(eventType) {
+		if(eventType) {
+			var fnName = 'on' + eventType.capitalize();
+			return this.options[fnName] || function() {};
+		}
+	}
+});
+
 var PalettePicker = new Class({
 	initialize: function(element, options) {
 		this.element = $(element);
@@ -157,6 +199,18 @@ var Game = new Class({
 		this.mainCanvas.refresh();
 
 		this.grid.loadInitialData();
+
+		// connect to the game server with a websocket
+		this.gameSocket = new JSONSocket({
+			url: 'ws://localhost:4567/paint/api/ws',
+			onOpen: function() {
+				console.log('websocket connected')
+			},
+			onSetCell: function(cell) {
+				console.log('cell update from server: [' + cell.x + ', ' + cell.y + ', ' + cell.color +']');
+				this.grid.setCell(cell.x, cell.y, cell.color);
+			}.bind(this)
+		}); 
 
 	},
 

@@ -1,11 +1,17 @@
 require 'sinatra'
-require "sinatra/reloader" if development?
 require 'sequel'
 require 'json'
+require 'sinatra-websocket'
 
 require './config/db'
 require './lib/simpledb'
+require './lib/websocket'
 
+# pretty sure tihs needs to go last in order for the other
+# included files to reload properly
+require "sinatra/reloader" if development?
+
+# important - the cell data requests are large, but compress by about 90%
 use Rack::Deflater
 
 get '/' do
@@ -22,6 +28,14 @@ end
 
 get '/paint' do
 	erb :paint
+end
+
+get '/paint/api/ws' do
+	if !request.websocket?
+		'websockets only'
+	else
+		request.websocket { |ws| PaintWebSocket.new(ws) }
+	end
 end
 
 get '/paint/api/setcell' do
@@ -45,5 +59,23 @@ get '/paint/api/cell' do
 	s = SimpleDb.new
 	data = s.db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
 	{:result => 'ok', :data => data}.to_json
+
+end
+
+class PaintWebSocket < WebSocketHelper
+	@username = nil
+
+	def on_set_cell(data)
+
+		s = SimpleDb.new
+		if s.db[:cell].where(:x => data[:x], :y => data[:y]).count == 0
+			s.db[:cell].insert(
+				:x => data[:x].to_i,
+				:y => data[:y].to_i,
+				:color => data[:color]
+			)
+		end
+
+	end
 
 end
