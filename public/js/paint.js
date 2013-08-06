@@ -202,7 +202,7 @@ var Game = new Class({
 
 		// connect to the game server with a websocket
 		this.gameSocket = new JSONSocket({
-			url: 'ws://localhost:4567/paint/api/ws',
+			url: 'ws://' + document.location.hostname + ':' + (document.location.port || '80') + '/paint/api/ws',
 			onOpen: function() {
 				console.log('websocket connected')
 			},
