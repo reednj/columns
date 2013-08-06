@@ -212,6 +212,7 @@ var Game = new Class({
 			onSetCell: function(cell) {
 				console.log('cell update from server: [' + cell.x + ', ' + cell.y + ', ' + cell.color +']');
 				this.grid.setCell(cell.x, cell.y, cell.color);
+				this.mainCanvas.refresh();
 			}.bind(this)
 		}); 
 

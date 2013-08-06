@@ -64,6 +64,8 @@ class PaintWebSocket < WebSocketHelper
 				:y => data[:y].to_i,
 				:color => data[:color]
 			)
+
+			self.send_others('setCell', data)
 		end
 
 	end
