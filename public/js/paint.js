@@ -468,8 +468,8 @@ var CanvasGrid = new Class({
 			gy: this.topLeft.gy - offset.gy
 		};
 
-		for(var gx=renderStart.gx - 1; gx < renderStart.gx + this.columns + 1; gx++) {
-			for(var gy = renderStart.gy - 1; gy < renderStart.gy + this.rows + 1; gy++) {
+		for(var gx=renderStart.gx - 1; gx < renderStart.gx + this.columns + 2; gx++) {
+			for(var gy = renderStart.gy - 1; gy < renderStart.gy + this.rows + 2; gy++) {
 				if(!this.getCell(gx, gy)) {
 					continue;
 				}
