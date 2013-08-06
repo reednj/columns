@@ -53,13 +53,17 @@ get '/paint/api/cell' do
 end
 
 class PaintWebSocket < WebSocketHelper
-	@username = nil
+	
+	def initialize(ws)
+		super(ws)
+		@username = nil
+		@sql = SimpleDb.new
+	end
 
 	def on_set_cell(data)
-
-		s = SimpleDb.new
-		if s.db[:cell].where(:x => data[:x], :y => data[:y]).count == 0
-			s.db[:cell].insert(
+	
+		if @sql.db[:cell].where(:x => data[:x], :y => data[:y]).count == 0
+			@sql.db[:cell].insert(
 				:x => data[:x].to_i,
 				:y => data[:y].to_i,
 				:color => data[:color]
