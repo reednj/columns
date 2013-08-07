@@ -14,6 +14,9 @@ require "sinatra/reloader" if development?
 # important - the cell data requests are large, but compress by about 90%
 use Rack::Deflater
 
+set :gitdir, development? ? './.git' : '/home/reednj/code/columns.git/.git'
+set :version, GitVersion.current(settings.gitdir)
+
 get '/' do
 	redirect to('/columns')
 end
