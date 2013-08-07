@@ -463,6 +463,7 @@ var CanvasGrid = new Class({
 
 	render: function(context, canvas) {
 
+
 		context.save();
 		context.translate(this.offset.x + this.gridOrigin.x % this.squareSize, this.offset.y + this.gridOrigin.y % this.squareSize);
 
@@ -505,16 +506,17 @@ var CanvasGrid = new Class({
 
 	renderGridLines: function(context, canvas) {
 		var extra = 10;
+		context.lineWidth = 1;
 		context.strokeStyle = 'rgba(150, 150, 150, 0.5)';
 
-		for(var i=-extra; i < (canvas.height / this.squareSize) + extra; i++) {
+		for(var i=-extra; i < this.rows + extra; i++) {
 			context.beginPath();
 			context.moveTo(this.squareSize*-extra, i * this.squareSize + 0.5);
 			context.lineTo(canvas.width + this.squareSize*extra, i * this.squareSize + 0.5);
 			context.stroke();
 		}
 
-		for(var i=-extra; i < (canvas.width / this.squareSize) + extra; i++) {
+		for(var i=-extra; i < this.columns + extra; i++) {
 			context.beginPath();
 			context.moveTo(i * this.squareSize + 0.5,  this.squareSize*-extra);
 			context.lineTo( i * this.squareSize + 0.5, canvas.height +  this.squareSize*extra);
