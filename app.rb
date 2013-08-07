@@ -3,7 +3,6 @@ require 'sequel'
 require 'json'
 require 'sinatra-websocket'
 
-require './config/db'
 require './lib/simpledb'
 require './lib/websocket'
 
@@ -49,8 +48,8 @@ get '/paint/api/cell' do
 	ex = params[:ex].to_i
 	ey = params[:ey].to_i
 
-	s = SimpleDb.new
-	data = s.db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
+	db = GamesDb.connect
+	data = db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
 	{:result => 'ok', :data => data}.to_json
 
 end
@@ -60,13 +59,13 @@ class PaintWebSocket < WebSocketHelper
 	def initialize(ws)
 		super(ws)
 		@username = nil
-		@sql = SimpleDb.new
+		@db = GamesDb.connect
 	end
 
 	def on_set_cell(data)
 	
-		if @sql.db[:cell].where(:x => data[:x], :y => data[:y]).count == 0
-			@sql.db[:cell].insert(
+		if @db[:cell].where(:x => data[:x], :y => data[:y]).count == 0
+			@db[:cell].insert(
 				:x => data[:x].to_i,
 				:y => data[:y].to_i,
 				:color => data[:color]

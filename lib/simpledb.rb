@@ -1,12 +1,11 @@
+require './config/db'
 require './lib/filecache'
 
-class SimpleDb
-	def initialize
-		@db = nil
-	end
+class GamesDb < Sequel::Database
+	def self.connect
+		@ext = DbExtensions.new(self)
 
-	def connect
-		@db = Sequel.connect(
+		return super(
 			:adapter => 'mysql',
 			:user => AppConfig.db.username,
 			:host => AppConfig.db.host,
@@ -14,14 +13,11 @@ class SimpleDb
 			:password=>AppConfig.db.password
 		)
 	end
+end
 
-	def db
-		if @db != nil
-			return @db
-		else
-			self.connect
-			return @db
-		end
+class DbExtensions
+	def initialize(db)
+		@db = db
 	end
 end
 
