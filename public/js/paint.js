@@ -150,16 +150,18 @@ var PalettePicker = new Class({
 });
 
 var Game = new Class({
-	initialize: function() {
+	initialize: function(options) {
+		this.options = options || {};
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: false});
 		this.canvas = this.mainCanvas.canvas;
 		this.squareSize = 20;
+		this.options.debug = this.options.debug === true? true : false;
 
 		this.setCanvasSize();
 
 		// configure the main grid
 		this.grid = new CanvasGrid({
-			debug: true,
+			debug: this.options.debug,
 			squareSize: this.squareSize,
 			initialPosition: this.loadLocation(),
 			onCellSet: function(gx, gy, color) {

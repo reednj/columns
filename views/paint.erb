@@ -15,9 +15,9 @@
 	<script src="js/paint.js"></script>
 
 	<script type='text/javascript'>
+		var _debug = <%= settings.development?.to_json %>;
 		window.addEvent('load', function() {
-			var g = new Game();
-
+			var g = new Game({debug: _debug});
 		});
 	</script>
 
