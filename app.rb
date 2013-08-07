@@ -41,7 +41,9 @@ get '/paint/api/ws' do
 end
 
 post '/paint/api/cell' do
-	@db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
+	db = GamesDb.connect
+	db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
+	return 200
 end
 
 get '/paint/api/cell' do

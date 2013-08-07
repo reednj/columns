@@ -59,6 +59,10 @@ var JSONSocket = new Class({
 			var fnName = 'on' + eventType.capitalize();
 			return this.options[fnName] || function() {};
 		}
+	},
+
+	isConnected: function() {
+		return this.ws.readyState == WebSocket.OPEN;
 	}
 });
 
@@ -214,7 +218,7 @@ var Game = new Class({
 				this.grid.setCell(cell.x, cell.y, cell.color);
 				this.mainCanvas.refresh();
 			}.bind(this)
-		}); 
+		});
 
 	},
 
@@ -260,7 +264,14 @@ var Game = new Class({
 
 	setCell: function(gx, gy, color) {
 		var data = {x: gx, y: gy, color: color};
-		this.gameSocket.send('setCell', data);
+
+		// if we are connected to the websocket, then send the data through
+		// there, otherwise fall back to basic ajax to set the cells
+		if(this.gameSocket && this.gameSocket.isConnected()) {
+			this.gameSocket.send('setCell', data);
+		} else {
+			new Request.JSON({url: '/paint/api/cell'}).post(data);
+		}
 	},
 
 	initEvents: function() {
