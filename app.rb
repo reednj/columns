@@ -41,8 +41,10 @@ get '/paint/api/ws' do
 end
 
 post '/paint/api/cell' do
-	db = GamesDb.connect
-	db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
+	GamesDb.connect do |db|
+		db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
+	end
+
 	return 200
 end
 
@@ -54,9 +56,10 @@ get '/paint/api/cell' do
 	ex = params[:ex].to_i
 	ey = params[:ey].to_i
 
-	db = GamesDb.connect
-	data = db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
-	{:result => 'ok', :data => data}.to_json
+	GamesDb.connect do |db|
+		data = db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
+		{:result => 'ok', :data => data}.to_json
+	end
 
 end
 
