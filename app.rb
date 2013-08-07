@@ -40,6 +40,10 @@ get '/paint/api/ws' do
 	end
 end
 
+post '/paint/api/cell' do
+	@db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
+end
+
 get '/paint/api/cell' do
 	content_type 'application/json'
 
@@ -64,13 +68,7 @@ class PaintWebSocket < WebSocketHelper
 
 	def on_set_cell(data)
 	
-		if @db[:cell].where(:x => data[:x], :y => data[:y]).count == 0
-			@db[:cell].insert(
-				:x => data[:x].to_i,
-				:y => data[:y].to_i,
-				:color => data[:color]
-			)
-
+		if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color])
 			self.send_others('setCell', data)
 		end
 

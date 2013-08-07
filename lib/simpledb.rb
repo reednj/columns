@@ -3,8 +3,6 @@ require './lib/filecache'
 
 class GamesDb < Sequel::Database
 	def self.connect
-		@ext = DbExtensions.new(self)
-
 		return super(
 			:adapter => 'mysql',
 			:user => AppConfig.db.username,
@@ -15,9 +13,32 @@ class GamesDb < Sequel::Database
 	end
 end
 
+class Sequel::Database
+	@ext = nil
+	def ext
+		@ext = DbExtensions.new(self) if @ext == nil
+		return @ext
+	end
+end
+
 class DbExtensions
+
 	def initialize(db)
 		@db = db
+	end
+
+	def set_cell(x, y, color)
+		if @db[:cell].where(:x => x, :y => y).count == 0
+			@db[:cell].insert(
+				:x => x,
+				:y => y,
+				:color => color
+			)
+
+			return true
+		else
+			return false
+		end
 	end
 end
 
