@@ -152,10 +152,13 @@ var PalettePicker = new Class({
 var Game = new Class({
 	initialize: function(options) {
 		this.options = options || {};
+		this.options.debug = this.options.debug === true? true : false;
+
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: false});
+		this.mapCanvas = new CanvasHelper('map-canvas', {autoRedraw: false});
 		this.canvas = this.mainCanvas.canvas;
 		this.squareSize = 20;
-		this.options.debug = this.options.debug === true? true : false;
+		
 
 		this.setCanvasSize();
 
@@ -201,8 +204,14 @@ var Game = new Class({
 
 		this.initEvents();
 
+		this.minimap = new MiniMap({
+			center: this.grid.getCenter(),
+			onImageLoad: function() {
+				this.mapCanvas.refresh();
+			}.bind(this)
+		});
+		this.mapCanvas.add(this.minimap);
 		this.mainCanvas.add(this.grid);
-		this.mainCanvas.refresh();
 
 		this.grid.loadInitialData();
 
@@ -221,6 +230,9 @@ var Game = new Class({
 				this.mainCanvas.refresh();
 			}.bind(this)
 		});
+
+		this.mapCanvas.refresh();
+		this.mainCanvas.refresh();
 
 	},
 
@@ -291,6 +303,7 @@ var Game = new Class({
 				this.grid.resetOrigin();
 				this.saveLocation();
 				this.mainCanvas.refresh();
+				this.mapCanvas.refresh();
 			}.bind(this),
 
 			onDragging: function(e) {
@@ -317,6 +330,130 @@ var Game = new Class({
 
 	loadLocation: function() {
 		return JSON.decode(Cookie.read('location') || 'null')
+	}
+
+});
+
+var MiniMap = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.width = this.options.width || 200;
+		this.height = this.options.height || 100;
+		this.options.center = this.options.center || { gx: (this.width/2).floor(),  gy: (this.height/2).floor() };
+		this.gx = this.options.gx || this.options.center.gx - (this.width / 2).floor();
+		this.gy = this.options.gy || this.options.center.gy - (this.height / 2).floor();
+		
+		// when one of the images has completed loading, we probably want to refresh the
+		// canvas, so that it shows up
+		this.options.onImageLoad = this.options.onImageLoad || function() {};
+
+		// this has to match the image sizes generated on the server, otherwise we won't be
+		// able to properly calculate which images to load
+		this.blockWidth = 200;
+		this.blockHeight = 100;
+
+		this.img = new Image() 
+		this.img.src = this.imagePath(0,0);
+
+		this.blocks = {};
+	},
+
+	// sets the center of the mini map to be the given gx, gy coords. This is useful instead of setting
+	// the topleft position, because we want the center of the mini map to line with the center of the
+	// actual grid
+	setCenter: function(gx, gy) {
+	},
+
+	// this is the position in the game world (ie the grid coords) of the 0,0 point on the 
+	// canvas
+	setPosition: function(gx, gy) {
+		if(typeOf(gx) == 'number' && typeOf(gy) == 'number') {
+			this.gx = gx;
+			this.gy = gy;
+		}
+	},
+
+	render: function(context, canvas) {
+		context.save();
+		context.translate(-this.gx, -this.gy);
+
+		this.requiredBlocks().each(function(b) {
+			var grid = this.blockToGrid(b.bx, b.by);
+			var imageBlock = this.blocks[this.getBlockID(b.bx, b.by)];
+			
+			if(!imageBlock) {
+				imageBlock = this.addImage(b.bx, b.by);
+			}
+
+			context.drawImage(imageBlock.image, grid.x, grid.y);
+		}.bind(this));
+
+		context.restore();
+
+		// now we draw the viewport rectangle..
+		context.strokeStyle = '#ffff00';
+		var viewport = {width: 71, height: 33 };
+		context.strokeRect((canvas.width - viewport.width) / 2, (canvas.height - viewport.height) / 2, viewport.width, viewport.height);
+	},
+
+	addImage: function(bx, by) {
+		var id = this.getBlockID(bx, by);
+
+		if(!this.blocks[id]) {
+			 var b = {bx: bx, by: by, image: new Image() };
+			 b.image.addEvent('load', function() { this.options.onImageLoad(); }.bind(this));
+			 b.image.src = this.imagePath(bx, by);
+			 this.blocks[id] = b;
+		}
+
+		return this.blocks[id];
+	},
+
+	getBlockID: function(bx, by) {
+		return bx + ':' + by;
+	},
+
+	requiredBlocks: function() {
+		var cornerList = [
+			this.topLeft(),
+			{gx: this.topLeft().gx + this.width, gy: this.topLeft().gy},
+			{gx: this.topLeft().gx, gy: this.topLeft().gy + this.height},
+			{gx: this.topLeft().gx + this.width, gy: this.topLeft().gy + this.height}
+		];
+
+		var blockList = {};
+		cornerList.each(function(c) {
+			var block = this.gridToBlock(c.gx, c.gy);
+			blockList[block.bx + ':' + block.by] = block;
+		}.bind(this));
+
+		return Object.values(blockList);
+	},
+
+	requiredImages: function() {
+		return this.requiredBlocks().map(function(b) { return this.imagePath(b.bx, b.by); }.bind(this));
+	},
+
+	imagePath: function(bx, by) {
+		return '/paint/api/map?x=' + bx + '&y=' + by;
+	},
+
+	topLeft: function() {
+		return {gx: this.gx, gy: this.gy};
+	},
+
+	gridToBlock: function(gx, gy) {
+		return {
+			bx: ((gx + this.blockWidth / 2) / this.blockWidth).floor(),
+			by: ((gy + this.blockHeight / 2) / this.blockHeight).floor()
+		};
+	},
+
+	blockToGrid: function(bx, by) {
+		return {
+			x: (bx * this.blockWidth) - this.blockWidth / 2,
+			y: (by * this.blockHeight) - this.blockHeight / 2
+		}
 	}
 
 });
@@ -584,6 +721,13 @@ var CanvasGrid = new Class({
 			sx: ((gx + this.sectionSize / 2) / this.sectionSize).floor(),
 			sy: ((gy + this.sectionSize / 2) / this.sectionSize).floor()
 		}
+	},
+
+	getCenter: function() {
+		return {
+			gx: this.topLeft.gx + (this.columns / 2).floor(),
+			gy: this.topLeft.gy + (this.rows / 2).floor()
+		};
 	}
 
 });
