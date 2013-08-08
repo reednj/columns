@@ -302,6 +302,8 @@ var Game = new Class({
 
 				this.grid.resetOrigin();
 				this.saveLocation();
+
+				this.minimap.setCenter(this.grid.getCenter());
 				this.mainCanvas.refresh();
 				this.mapCanvas.refresh();
 			}.bind(this),
@@ -362,6 +364,18 @@ var MiniMap = new Class({
 	// the topleft position, because we want the center of the mini map to line with the center of the
 	// actual grid
 	setCenter: function(gx, gy) {
+		if(typeOf(gx) == 'object' && !gy) {
+			// we can also pass an object in the format {gx, gy}
+			// so if thats happened we want to normalize things
+			var g = gx;
+			gx = g.gx;
+			gy = g.gy;
+		}
+
+		if(typeOf(gx) == 'number' && typeOf(gy) == 'number') {
+			this.gx = gx - (this.width / 2).floor();
+			this.gy = gy - (this.height / 2).floor();
+		}
 	},
 
 	// this is the position in the game world (ie the grid coords) of the 0,0 point on the 
