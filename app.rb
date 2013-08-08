@@ -69,6 +69,10 @@ get '/paint/api/cell' do
 	GamesDb.connect do |db|
 		data = db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
 		
+		# the small format puts the data directly into the format needed by the
+		# client in its data array. The json is about 20% the size, and it processes
+		# in about 70% the time. The gzipped size is about the same though, so
+		# we don't really save any bandwidth
 		if format == 'small'
 			result = {}
 			data.each do |cell|

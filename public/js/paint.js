@@ -246,6 +246,8 @@ var Game = new Class({
 			return;
 		}
 
+		range.format = 'small';
+
 		new Request.JSON({
 			url: '/paint/api/cell',
 			onSuccess: function(response) {
@@ -254,12 +256,8 @@ var Game = new Class({
 					return;
 				}
 
-				(response.data || []).each(function(cell) {
-					this.grid.setCell(cell.x, cell.y, cell.color);
-				}.bind(this));
-
+				this.grid.addCells(response.data);
 				this.mainCanvas.refresh();
-
 			}.bind(this)
 		}).get(range);
 	},
@@ -374,6 +372,16 @@ var CanvasGrid = new Class({
 
 	getCell: function(gx, gy) {
 		return this.data[this.getCellID(gx, gy)];
+	},
+
+	// given a second data array, merge it into the existing one. This is the sort
+	// of data we get from the sever in the 'small' format, which allows the client
+	// to processes the new cells about 30% faster
+	addCells: function(newData) {
+		if(newData && typeOf(newData) == 'object') {
+			Object.append(this.data, newData);
+		}
+		return this;
 	},
 
 	setCell: function(gx, gy, color, withEvents) {
