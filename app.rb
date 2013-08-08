@@ -5,6 +5,7 @@ require 'sinatra-websocket'
 
 require './lib/simpledb'
 require './lib/websocket'
+require './lib/minimap'
 
 # pretty sure tihs needs to go last in order for the other
 # included files to reload properly
@@ -28,6 +29,9 @@ get '/wall' do
 	erb :wall
 end
 
+# everything below here has to do with the paint game
+# will probably need to be moved out to its own project at some point
+
 get '/test/timer' do
 	erb :'test/timer'
 end
@@ -42,6 +46,20 @@ get '/paint/api/ws' do
 	else
 		request.websocket { |ws| PaintWebSocket.new(ws) }
 	end
+end
+
+get '/paint/api/map' do
+	bx = params[:x].to_i
+	by = params[:y].to_i
+	filename = 'thumb.png'
+
+	GamesDb.connect do |db|
+		mini_map = PaintMiniMap.new(db)
+		mini_map.save_png(bx, by)
+		filename = mini_map.get_filename(bx, by)
+	end
+
+	send_file File.expand_path(filename, settings.public_folder)
 end
 
 post '/paint/api/cell' do
