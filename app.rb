@@ -28,6 +28,10 @@ get '/wall' do
 	erb :wall
 end
 
+get '/test/timer' do
+	erb :'test/timer'
+end
+
 get '/paint' do
 	erb :paint
 end
@@ -55,9 +59,25 @@ get '/paint/api/cell' do
 	sy = params[:sy].to_i
 	ex = params[:ex].to_i
 	ey = params[:ey].to_i
+	format = 'normal'
+
+	if params[:format] != nil
+		format = params[:format]
+	end
+
 
 	GamesDb.connect do |db|
 		data = db[:cell].where('x >= ? && y >= ? && x < ? && y < ?', sx, sy, ex, ey).limit(20000).all
+		
+		if format == 'small'
+			result = {}
+			data.each do |cell|
+				id = cell[:x].to_s(16) + ':' + cell[:y].to_s(16)
+				result[id] = cell[:color]
+			end
+			data = result
+		end
+
 		{:result => 'ok', :data => data}.to_json
 	end
 
