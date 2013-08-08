@@ -386,7 +386,7 @@ var CanvasGrid = new Class({
 	},
 
 	getCellID: function(gx, gy) {
-		return gx.toString(16) + '-' + gy.toString(16);
+		return gx.toString(16) + ':' + gy.toString(16);
 	},
 
 	getSectionID: function(sx, sy) {
