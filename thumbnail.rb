@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'chunky_png'
 require 'sequel'
 require './lib/simpledb'

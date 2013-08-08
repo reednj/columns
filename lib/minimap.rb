@@ -33,6 +33,7 @@ class PaintMiniMap
 
 			gray = ColorHelper.from_string(cell[:color]).grayscale_teint
 			png[image_x, image_y] = ChunkyPNG::Color.grayscale(gray) 
+
 		end
 
 		return png
@@ -54,9 +55,13 @@ class ColorHelper
 	def self.from_string(str)
 		ch = ColorHelper.new
 		color = ColorHelper.normalize(str)
-		ch.r = Integer(color[1, 2], 16)
-		ch.g = Integer(color[3, 2], 16)
-		ch.b = Integer(color[5, 2], 16)
+		
+		if color.length == 7
+			ch.r = Integer('0x' + color[1..2])
+			ch.g = Integer('0x' + color[3..4])
+			ch.b = Integer('0x' + color[5..6])
+		end
+
 		return ch
 	end
 
