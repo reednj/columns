@@ -2,21 +2,28 @@ require 'sequel'
 require 'chunky_png'
 
 class PaintMiniMap
-	@db = nil
-
 
 	def initialize(db)
 		@db = db
 		@block_width = 200
 		@block_height = 100
+		@dir = 'map'
+
+		if !File.directory?(self.dir_path)
+			Dir.mkdir(self.dir_path)
+		end
 	end
 
 	def get_filename(bx, by)
-		'thumb.' + bx.to_s + '.' + by.to_s + '.png'
+		"thumb.#{bx}.#{by}.png"
 	end
 
 	def get_path(bx, by)
-		File.join('public', 'map', self.get_filename(bx, by))
+		File.join('public', @dir, self.get_filename(bx, by))
+	end
+
+	def dir_path
+		File.join 'public', @dir
 	end
 
 	def save_png(bx, by)
@@ -55,11 +62,16 @@ class ColorHelper
 	def self.from_string(str)
 		ch = ColorHelper.new
 		color = ColorHelper.normalize(str)
-		
-		if color.length == 7
+
+		if color.class == String && color.length == 7
 			ch.r = Integer('0x' + color[1..2])
 			ch.g = Integer('0x' + color[3..4])
 			ch.b = Integer('0x' + color[5..6])
+
+		else
+			ch.r = 0
+			ch.g = 0
+			ch.b = 0
 		end
 
 		return ch
@@ -67,7 +79,7 @@ class ColorHelper
 
 	def self.normalize(str)
 		if str.length == 4
-			return str[1] + str[1] + str[2] + str[2] + str[3] + str[3]
+			return "#{str[1]}#{str[1]}#{str[2]}#{str[2]}#{str[3]}#{str[3]}"
 		else 
 			return str
 		end
