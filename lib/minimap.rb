@@ -16,7 +16,7 @@ class PaintMiniMap
 	end
 
 	def get_path(bx, by)
-		File.join('public', self.get_filename(bx, by))
+		File.join('public', 'map', self.get_filename(bx, by))
 	end
 
 	def save_png(bx, by)

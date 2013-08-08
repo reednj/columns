@@ -1,8 +1,13 @@
+# games.popacular.com
+cache/*
+public/map/*
+
+
 #################
 ## Eclipse
 #################
 
-cache/*
+
 
 *.pydevproject
 .project

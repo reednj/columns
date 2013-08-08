@@ -51,15 +51,17 @@ end
 get '/paint/api/map' do
 	bx = params[:x].to_i
 	by = params[:y].to_i
-	filename = 'thumb.png'
+	path = nil
 
 	GamesDb.connect do |db|
 		mini_map = PaintMiniMap.new(db)
 		mini_map.save_png(bx, by)
-		filename = mini_map.get_filename(bx, by)
+		path = mini_map.get_path(bx, by)
 	end
 
-	send_file File.expand_path(filename, settings.public_folder)
+	return 500 if path == nil
+
+	send_file path
 end
 
 post '/paint/api/cell' do
