@@ -206,6 +206,7 @@ var Game = new Class({
 
 		this.minimap = new MiniMap({
 			center: this.grid.getCenter(),
+			viewportSize: {width: this.grid.columns, height: this.grid.rows},
 			onImageLoad: function() {
 				this.mapCanvas.refresh();
 			}.bind(this)
@@ -399,6 +400,11 @@ var MiniMap = new Class({
 		this.options.center = this.options.center || { gx: (this.width/2).floor(),  gy: (this.height/2).floor() };
 		this.gx = this.options.gx || this.options.center.gx - (this.width / 2).floor();
 		this.gy = this.options.gy || this.options.center.gy - (this.height / 2).floor();
+
+		// this is the size of the main canvas viewport. it is used to render the yellow
+		// rect on the minimap. Just assume that if it exists in the options, the user
+		// passed in a correctly formatted object
+		this.viewportSize = this.options.viewportSize || { width: 20, height: 20 };
 		
 		// when one of the images has completed loading, we probably want to refresh the
 		// canvas, so that it shows up
@@ -460,8 +466,12 @@ var MiniMap = new Class({
 
 		// now we draw the viewport rectangle..
 		context.strokeStyle = '#ffff00';
-		var viewport = {width: 71, height: 33 };
-		context.strokeRect((canvas.width - viewport.width) / 2, (canvas.height - viewport.height) / 2, viewport.width, viewport.height);
+		context.strokeRect(
+			((canvas.width - this.viewportSize.width) / 2).floor() + 0.5, 
+			((canvas.height - this.viewportSize.height) / 2).floor() + 0.5, 
+			this.viewportSize.width, 
+			this.viewportSize.height
+		);
 	},
 
 	loadBlock: function(bx, by) {
