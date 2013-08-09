@@ -36,11 +36,16 @@ class FileCache
 
 	end
 
+	def cache_valid?(filename, maxage_sec)
+		path = self.get_path filename
+		return File.exist?(path) && File.mtime(path) > Time.now - maxage_sec
+	end
+
 	# checks the cache, and returns the file if it exits, and has not expired, otherwise
 	# just returns nil
 	def from_cache(filename, maxage_sec)
 		path = self.get_path filename
-		if File.exist?(path) && File.mtime(path) > Time.now - maxage_sec
+		if self.cache_valid?(filename, maxage_sec)
 			json_obj = JSON.parse(File.read(path), {:symbolize_names => true})
 			return json_obj[:data]
 		else
@@ -51,6 +56,4 @@ class FileCache
 	def get_path(filename)
 		return File.join(@dir, filename)
 	end
-
-
 end

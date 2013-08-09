@@ -55,12 +55,18 @@ get '/paint/api/map' do
 
 	GamesDb.connect do |db|
 		mini_map = PaintMiniMap.new(db)
-		mini_map.save_png(bx, by)
 		path = mini_map.get_path(bx, by)
+		filename = mini_map.get_filename(bx, by)
+
+		# the minimap images are kind of expensive to generate, so I only want to
+		# do every so often. we check the image on disk, and only regenerate it if it
+		# is older than a minute. It is ok for them to be a little out of date.
+		if !FileCache.new(mini_map.dir_path).cache_valid?(filename, 60)
+			mini_map.save_png(bx, by)
+		end
 	end
 
 	return 500 if path == nil
-
 	send_file path
 end
 

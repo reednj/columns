@@ -19,7 +19,7 @@ class PaintMiniMap
 	end
 
 	def get_path(bx, by)
-		File.join('public', @dir, self.get_filename(bx, by))
+		File.join(self.dir_path, self.get_filename(bx, by))
 	end
 
 	def dir_path
