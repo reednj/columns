@@ -278,6 +278,8 @@ var Game = new Class({
 	setCell: function(gx, gy, color) {
 		var data = {x: gx, y: gy, color: color};
 
+		this.minimap.setCell(gx, gy, color);
+
 		// if we are connected to the websocket, then send the data through
 		// there, otherwise fall back to basic ajax to set the cells
 		if(this.gameSocket && this.gameSocket.isConnected()) {
@@ -394,6 +396,64 @@ var ScaleConverter = new Class({
 	}
 });
 
+var ImageDataHelper = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.context = this.options.context || null;
+		this.width = this.options.width || 0;
+		this.height = this.options.height || 0;
+		this.imageData = this.context.createImageData(this.width, this.height);
+	},
+
+	setPixel: function(x, y, color) {
+		
+		if(typeOf(color) == 'string') {
+			colorData = this.toColorArray(color);
+		} else if(typeOf(color) == 'array') {
+			colorData = color;
+		}
+
+		this.setPixelRed(x, y, colorData[0]);
+		this.setPixelGreen(x, y, colorData[1]);
+		this.setPixelBlue(x, y, colorData[2]);
+		this.setPixelAlpha(x, y, 255);
+		return this;
+	},
+
+	setPixelRed: function(x, y, colorByte) {
+		this.imageData.data[this.pixelIndex(x, y)] = colorByte;
+		return this;
+	},
+
+	setPixelGreen: function(x, y, colorByte) {
+		this.imageData.data[this.pixelIndex(x, y) + 1] = colorByte;
+		return this;
+	},
+
+	setPixelBlue: function(x, y, colorByte) {
+		this.imageData.data[this.pixelIndex(x, y) + 2] = colorByte;
+		return this;
+	},
+
+	setPixelAlpha: function(x, y, alpha) {
+		this.imageData.data[this.pixelIndex(x, y) + 3] = alpha;
+		return this;
+	},
+
+	pixelIndex: function(x, y) {
+		return (x + y * this.width) * 4;
+	},
+
+	toColorArray: function(colorString) {
+		return colorString.hexToRgb(true);
+	},
+
+	toGrayscale: function(colorArray) {
+		var tient = colorArray[0] * 0.299 + colorArray[1] * 0.587 + colorArray[2] * 0.114;
+		return [tient, tient, tient];
+	}
+});
+
 var MiniMap = new Class({
 	initialize: function(options) {
 		this.options = options || {};
@@ -402,6 +462,9 @@ var MiniMap = new Class({
 		this.options.center = this.options.center || { gx: (this.width/2).floor(),  gy: (this.height/2).floor() };
 		this.gx = this.options.gx || this.options.center.gx - (this.width / 2).floor();
 		this.gy = this.options.gy || this.options.center.gy - (this.height / 2).floor();
+
+		this.canvas = $(this.options.canvas || 'map-canvas');
+		this.context = this.canvas.getContext('2d');
 
 		// this is the size of the main canvas viewport. it is used to render the yellow
 		// rect on the minimap. Just assume that if it exists in the options, the user
@@ -424,6 +487,34 @@ var MiniMap = new Class({
 		});
 
 		this.blocks = {};
+
+	},
+
+	setCell: function(x, y, color) {
+		var blockInfo = this.scaleHelper.worldToBlock(x, y);
+		var block = this.getBlock(blockInfo.bx, blockInfo.by);
+
+		if(block) {
+			// when the user sets a cell in an area that has been loaded on the minimap, we want to 
+			// update the image, so that the change shows straight away (without having to reload the
+			// whole image from the server. 
+			//
+			// The way we do this is by creating an image data area exactly the same size at the map
+			// block image that somes from the server, then we set the pixels in there and render it
+			// on top of the minimap image.
+			var blockRect = this.scaleHelper.blockRect(blockInfo.bx, blockInfo.by);
+
+			if(!block.overlay) {
+				block.overlay = new ImageDataHelper({
+					context: this.context, 
+					width: this.scaleHelper.blockWidth, 
+					height: this.scaleHelper.blockHeight
+				});
+			}
+
+			var colorData = block.overlay.toGrayscale(block.overlay.toColorArray(color));
+			block.overlay.setPixel(x - blockRect.x, y - blockRect.y, colorData);
+		}
 	},
 
 	// sets the center of the mini map to be the given gx, gy coords. This is useful instead of setting
@@ -464,7 +555,17 @@ var MiniMap = new Class({
 				this.loadBlock(b.bx, b.by);
 			}
 
-			context.drawImage(this.getBlock(b.bx, b.by).image, rect.x, rect.y);
+			var blockData = this.getBlock(b.bx, b.by);
+
+			if(blockData.overlay) {
+				// put image data is not effected by the transformation matrix, so we need to 
+				// translate the x,y origin manually
+				context.putImageData(blockData.overlay.imageData, rect.x - this.gx, rect.y - this.gy);
+			}
+
+			context.drawImage(blockData.image, rect.x, rect.y);
+
+
 		}.bind(this));
 
 		context.restore();
