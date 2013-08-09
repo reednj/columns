@@ -685,9 +685,10 @@ var CanvasGrid = new Class({
 
 		context.restore();
 
+		context.fillStyle = '#888';
+		context.fillText(this.topLeft.gx + ', ' + this.topLeft.gy, 20, 20);
+
 		if(this.options.debug) {
-			context.fillStyle = '#888';
-			context.fillText(this.topLeft.gx + ', ' + this.topLeft.gy, 20, 20);
 			context.fillText(canvas.width + 'x' + canvas.height + 'px', 20, 50);
 			context.fillText(this.columns + 'x' + this.rows + 'sq', 20, 35);
 		}
