@@ -174,10 +174,10 @@ var Game = new Class({
 
 			onDataRequired: function(sectionGrid) {
 				var range = {
-					sx: sectionGrid.gx,
-					sy: sectionGrid.gy,
-					ex: sectionGrid.gx + sectionGrid.width,
-					ey: sectionGrid.gy + sectionGrid.height
+					sx: sectionGrid.x,
+					sy: sectionGrid.y,
+					ex: sectionGrid.x + sectionGrid.width,
+					ey: sectionGrid.y + sectionGrid.height
 				};
 
 				this.loadCells(range);
@@ -383,7 +383,9 @@ var ScaleConverter = new Class({
 	blockToWorld: function(bx, by) {
 		return {
 			x: bx * this.blockWidth - this.offsetX,
-			y: by * this.blockHeight - this.offsetY
+			y: by * this.blockHeight - this.offsetY,
+			width: this.blockWidth,
+			height: this.blockHeight
 		};
 	},
 
@@ -412,6 +414,9 @@ var MiniMap = new Class({
 
 		// bw & bh have to match the image sizes generated on the server, otherwise we won't be
 		// able to properly calculate which images to load
+		//
+		// todo: the block dims should come from a gameoptions object further up, incase they need to be
+		// changed
 		this.scaleHelper = new ScaleConverter({
 			blockWidth: 200,
 			blockHeight: 100,
@@ -527,12 +532,13 @@ var CanvasGrid = new Class({
 
 		this.currentColor = this.options.color || '#222';
 
-		// the section size is in grid squares, not px
-		this.sectionSize = 100;
 		this.sections = {};
+		this.scaleHelper = new ScaleConverter({
+			blockWidth: 100,
+			blockHeight: 100
+		});
 
 		this.isDragging = false;
-
 		this.canvas.addEvent('click', function(e) {
 			if(this.isDragging == true) {
 				this.isDragging = false;
@@ -615,43 +621,28 @@ var CanvasGrid = new Class({
 	},
 
 	requestRequiredData: function() {
-		// now we need to check here if we need more data.
-		this.dataRequiredFor().each(function(section) {
-			var sectionGrid = this.sectionToGrid(section.sx, section.sy);
-			this.options.onDataRequired(sectionGrid);
+		// required sections returns a list of the world sections that are needed to
+		// render the current viewport. We check each one to see if it is loaded, and if
+		// not, trigger the data required event, so that the parent can load the data
+		this.requiredSections().each(function(section) {
 
-			// we are actually only flagging here that the load has been requested
-			// not that the data has actually been set. Maybe this will cause problems
-			// in the future, but it is ok for now. If it causes problems, we can always
-			// change the this.sections hash so that is stores state, not just true/undef
-			this.setSectionLoaded(section.sx, section.sy);
-			console.log('loading section: [' + section.sx + ', ' + section.sy + ']');
+			if(!this.isSectionLoaded(section.bx, section.by)) {
+				var requiredRect = this.scaleHelper.blockRect(section.bx, section.by);
+				this.options.onDataRequired(requiredRect);
+
+				// we are actually only flagging here that the load has been requested
+				// not that the data has actually been set. Maybe this will cause problems
+				// in the future, but it is ok for now. If it causes problems, we can always
+				// change the this.sections hash so that is stores state, not just true/undef
+				this.setSectionLoaded(section.bx, section.by);
+				console.log('loading section: [' + section.bx + ', ' + section.by + ']');
+			}
 		}.bind(this));
 
 	},
 
-	dataRequiredFor: function() {
-		// check if any part of the view port sits in a section we don't have data for
-		// returns a list of section sx/sy objects
-		var cornerList = [
-			this.topLeft,
-			{gx: this.topLeft.gx + this.columns, gy: this.topLeft.gy},
-			{gx: this.topLeft.gx, gy: this.topLeft.gy + this.rows},
-			{gx: this.topLeft.gx + this.columns, gy: this.topLeft.gy + this.rows}
-		];
-
-		var sectionList = {};
-		cornerList.each(function(corner) {
-			var section = this.gridToSection(corner.gx, corner.gy);
-			if(!this.isSectionLoaded(section.sx, section.sy)) {
-				// yes, this will involve overwriting the same section mulitple times
-				// probably, but I don't really care. It is the easiest way to get
-				// a unique list of sections later on
-				sectionList[this.getSectionID(section.sx, section.sy)] = section;
-			}
-		}.bind(this));
-
-		return Object.values(sectionList);
+	requiredSections: function() {
+		return this.scaleHelper.blocksInRect(this.topLeft.gx, this.topLeft.gy, this.columns, this.rows);
 	},
 
 	setOffset: function(x, y) {
@@ -696,9 +687,9 @@ var CanvasGrid = new Class({
 
 		if(this.options.debug) {
 			context.fillStyle = '#888';
-			context.fillText(canvas.width + 'x' + canvas.height + 'px', 20, 20);
+			context.fillText(this.topLeft.gx + ', ' + this.topLeft.gy, 20, 20);
+			context.fillText(canvas.width + 'x' + canvas.height + 'px', 20, 50);
 			context.fillText(this.columns + 'x' + this.rows + 'sq', 20, 35);
-			context.fillText(this.topLeft.gx + ', ' + this.topLeft.gy, 20, 50);
 		}
 	},
 
@@ -756,22 +747,6 @@ var CanvasGrid = new Class({
 			x: clientX - this.canvas.offsetLeft,
 			y: clientY - this.canvas.offsetTop
 		};
-	},
-
-	sectionToGrid: function(sx, sy) {
-		return {
-			gx: sx * this.sectionSize - this.sectionSize / 2,
-			gy: sy * this.sectionSize - this.sectionSize / 2,
-			width: this.sectionSize,
-			height: this.sectionSize
-		};
-	},
-
-	gridToSection: function(gx, gy) {
-		return {
-			sx: ((gx + this.sectionSize / 2) / this.sectionSize).floor(),
-			sy: ((gy + this.sectionSize / 2) / this.sectionSize).floor()
-		}
 	},
 
 	getCenter: function() {
