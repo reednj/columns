@@ -336,6 +336,61 @@ var Game = new Class({
 
 });
 
+var ScaleConverter = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.blockWidth = this.options.blockWidth || 10;
+		this.blockHeight = this.options.blockHeight || 10;
+		this.offsetX =  this.options.offsetX || 0;
+		this.offsetY =  this.options.offsetY || 0;
+		
+		if(this.options.offsetCentered === true) {
+			// this means we want the center of the 0,0 block to
+			// be 0,0 in world coords. Instead of 0,0 world being the
+			// top left corner of the 0,0 block (which is the default)
+			this.offsetX = (this.blockWidth / 2).floor()
+			this.offsetY = (this.blockHeight / 2).floor()
+		}
+	},
+	
+	blocksInRect: function(x, y, width, height) {
+		var blocks = [];
+		var start = this.worldToBlock(x, y);
+		var end = this.worldToBlock(x + width, y + height);
+
+		for(var bx=start.bx; bx <= end.bx; bx++) {
+			for(var by=start.by; by <= end.by; by++) {
+				blocks.push({
+					bx: bx, 
+					by: by, 
+					width: this.blockWidth, 
+					height: this.blockHeight 
+				});
+			}
+		}
+			
+		return blocks;
+	},
+	
+	worldToBlock: function(x, y) {
+		return {
+			bx: ((x + this.offsetX) / this.blockWidth).floor(),
+			by: ((y + this.offsetY) / this.blockHeight).floor()
+		};
+	},
+	
+	blockToWorld: function(bx, by) {
+		return {
+			x: bx * this.blockWidth - this.offsetX,
+			y: by * this.blockHeight - this.offsetY
+		};
+	},
+
+	blockRect: function(bx, by) {
+		return this.blockToWorld(bx, by);
+	}
+});
+
 var MiniMap = new Class({
 	initialize: function(options) {
 		this.options = options || {};
@@ -349,13 +404,13 @@ var MiniMap = new Class({
 		// canvas, so that it shows up
 		this.options.onImageLoad = this.options.onImageLoad || function() {};
 
-		// this has to match the image sizes generated on the server, otherwise we won't be
+		// bw & bh have to match the image sizes generated on the server, otherwise we won't be
 		// able to properly calculate which images to load
-		this.blockWidth = 200;
-		this.blockHeight = 100;
-
-		this.img = new Image() 
-		this.img.src = this.imagePath(0,0);
+		this.scaleHelper = new ScaleConverter({
+			blockWidth: 200,
+			blockHeight: 100,
+			offsetCentered: true
+		});
 
 		this.blocks = {};
 	},
@@ -392,14 +447,13 @@ var MiniMap = new Class({
 		context.translate(-this.gx, -this.gy);
 
 		this.requiredBlocks().each(function(b) {
-			var grid = this.blockToGrid(b.bx, b.by);
-			var imageBlock = this.blocks[this.getBlockID(b.bx, b.by)];
+			var rect = this.scaleHelper.blockRect(b.bx, b.by);
 			
-			if(!imageBlock) {
-				imageBlock = this.addImage(b.bx, b.by);
+			if(!this.blockLoaded(b.bx, b.by)) {
+				this.loadBlock(b.bx, b.by);
 			}
 
-			context.drawImage(imageBlock.image, grid.x, grid.y);
+			context.drawImage(this.getBlock(b.bx, b.by).image, rect.x, rect.y);
 		}.bind(this));
 
 		context.restore();
@@ -410,7 +464,7 @@ var MiniMap = new Class({
 		context.strokeRect((canvas.width - viewport.width) / 2, (canvas.height - viewport.height) / 2, viewport.width, viewport.height);
 	},
 
-	addImage: function(bx, by) {
+	loadBlock: function(bx, by) {
 		var id = this.getBlockID(bx, by);
 
 		if(!this.blocks[id]) {
@@ -423,51 +477,24 @@ var MiniMap = new Class({
 		return this.blocks[id];
 	},
 
+	blockLoaded: function(bx, by) {
+		return this.getBlock(bx, by) != null;
+	},
+
+	getBlock: function(bx, by) {
+		return this.blocks[this.getBlockID(bx, by)];
+	},
+
 	getBlockID: function(bx, by) {
 		return bx + ':' + by;
 	},
 
 	requiredBlocks: function() {
-		var cornerList = [
-			this.topLeft(),
-			{gx: this.topLeft().gx + this.width, gy: this.topLeft().gy},
-			{gx: this.topLeft().gx, gy: this.topLeft().gy + this.height},
-			{gx: this.topLeft().gx + this.width, gy: this.topLeft().gy + this.height}
-		];
-
-		var blockList = {};
-		cornerList.each(function(c) {
-			var block = this.gridToBlock(c.gx, c.gy);
-			blockList[block.bx + ':' + block.by] = block;
-		}.bind(this));
-
-		return Object.values(blockList);
-	},
-
-	requiredImages: function() {
-		return this.requiredBlocks().map(function(b) { return this.imagePath(b.bx, b.by); }.bind(this));
+		return this.scaleHelper.blocksInRect(this.gx, this.gy, this.width, this.height);
 	},
 
 	imagePath: function(bx, by) {
 		return '/paint/api/map?x=' + bx + '&y=' + by;
-	},
-
-	topLeft: function() {
-		return {gx: this.gx, gy: this.gy};
-	},
-
-	gridToBlock: function(gx, gy) {
-		return {
-			bx: ((gx + this.blockWidth / 2) / this.blockWidth).floor(),
-			by: ((gy + this.blockHeight / 2) / this.blockHeight).floor()
-		};
-	},
-
-	blockToGrid: function(bx, by) {
-		return {
-			x: (bx * this.blockWidth) - this.blockWidth / 2,
-			y: (by * this.blockHeight) - this.blockHeight / 2
-		}
 	}
 
 });
