@@ -59,6 +59,12 @@ end
 class ColorHelper
 	attr_accessor :r, :g, :b
 
+	def initialize
+		self.r = 0
+		self.g = 0
+		self.b = 0
+	end
+
 	def self.from_string(str)
 		ch = ColorHelper.new
 		color = ColorHelper.normalize(str)
@@ -67,11 +73,6 @@ class ColorHelper
 			ch.r = Integer('0x' + color[1..2])
 			ch.g = Integer('0x' + color[3..4])
 			ch.b = Integer('0x' + color[5..6])
-
-		else
-			ch.r = 0
-			ch.g = 0
-			ch.b = 0
 		end
 
 		return ch
