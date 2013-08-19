@@ -187,10 +187,10 @@ var Game = new Class({
 		// set up the color picker
 		var p = new PalettePicker('picker', {
 			colors: [
-				"#356AA0","#4096EE","#C3D9FF",
-				"#FFFF88", "#FF7400",
-				"#6BBA70", "#006E2E", 
-				"#000000","#888","#FFFFFF"
+				"#356AA0","#4096EE","#C3D9FF", '#62C8CC',
+				"#FFFF88", "#FFBECC", "#FF7400", '#FF442F',
+				"#B1FF9E", "#6BBA70", "#006E2E", 
+				"#000000","#bbb","#FFFFFF"
 			],
 			initialColor: this.loadColor(),
 			previewElement: 'picker-preview',
