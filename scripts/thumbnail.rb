@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'chunky_png'
 require 'sequel'
+
+Dir.chdir '..'
 require './lib/simpledb'
 require './lib/minimap'
 
