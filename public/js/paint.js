@@ -664,7 +664,7 @@ var CanvasGrid = new Class({
 		});
 
 		this.isDragging = false;
-		this.canvas.addEvent('click', function(e) {
+		this.canvas.addEvent('mouseup', function(e) {
 			if(this.isDragging == true) {
 				this.isDragging = false;
 				return;
