@@ -1,7 +1,12 @@
-
+# A wrapper around the great sinatra-websocket gem (https://github.com/simulacre/sinatra-websocket) that
+# allows for event based websockets
 #
+# Each message to the client should be a json object in the form {'event': string, 'data': obj }
+# When received by the server the appropriate method for that event is called, if it exists. For
+# example, the event 'setCell' would try to call the method on_set_cell with object contained
+# in 'data'. You should subclass WebSocketHelper in order to implement these methods
 #
-# Nathan Reed (@reednj)
+# Nathan Reed (@reednj) 2013-08-21
 class WebSocketHelper
 	def initialize(ws)
 		# the sockets list is the list of all other WebSocketHelper classes
@@ -33,10 +38,12 @@ class WebSocketHelper
 		@sockets.delete(self)
 	end
 
+	# send a message in to the current client
 	def send(event, data)
 		@ws.send({:event => event, :data => data}.to_json)
 	end
 	
+	# sends a message to all connected clients, including the current client
 	def send_all(event, data)
 		EM.next_tick {
 			@sockets.each do |s|
@@ -45,6 +52,7 @@ class WebSocketHelper
 		}
 	end
 
+	# sends a message to all connected clients, *except* the current one
 	def send_others(event, data)
 		EM.next_tick {
 			@sockets.each do |s|
