@@ -1,8 +1,10 @@
 var GameOptions = {
+	squareSize: (Browser.Platform.ios) ? 15 : 20,
 	colors: ["#356AA0","#4096EE","#C3D9FF", '#62C8CC',
 			"#FFFF88", "#FFBECC", "#FF7400", '#FF442F',
 			"#B1FF9E", "#6BBA70", "#006E2E", 
 			"#000000","#bbb","#FFFFFF"]
+
 };
 
 Array.implement({
@@ -164,7 +166,7 @@ var Game = new Class({
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: false});
 		this.mapCanvas = new CanvasHelper('map-canvas', {autoRedraw: false});
 		this.canvas = this.mainCanvas.canvas;
-		this.squareSize = 20;
+		this.squareSize = GameOptions.squareSize || 20;
 		
 
 		this.setCanvasSize();
@@ -486,7 +488,7 @@ var MiniMap = new Class({
 		if(this.width && this.height) {
 			this.canvas.height = this.height;
 			this.canvas.width = this.width;
-		} 
+		}
 
 		// this is the size of the main canvas viewport. it is used to render the yellow
 		// rect on the minimap. Just assume that if it exists in the options, the user
