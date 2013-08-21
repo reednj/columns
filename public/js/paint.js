@@ -470,14 +470,23 @@ var ImageDataHelper = new Class({
 var MiniMap = new Class({
 	initialize: function(options) {
 		this.options = options || {};
-		this.width = this.options.width || 200;
-		this.height = this.options.height || 100;
+		
+		this.canvas = $(this.options.canvas || 'map-canvas');
+		this.context = this.canvas.getContext('2d');
+
+		this.width = this.options.width || (Browser.Platform.ios? 100 : 200);
+		this.height = this.options.height || (Browser.Platform.ios? 50 : 100);
 		this.options.center = this.options.center || { gx: (this.width/2).floor(),  gy: (this.height/2).floor() };
 		this.gx = this.options.gx || this.options.center.gx - (this.width / 2).floor();
 		this.gy = this.options.gy || this.options.center.gy - (this.height / 2).floor();
 
-		this.canvas = $(this.options.canvas || 'map-canvas');
-		this.context = this.canvas.getContext('2d');
+
+		// resize the canvas to match the passed in width and height, or if they are not set
+		// set them from the canvas element
+		if(this.width && this.height) {
+			this.canvas.height = this.height;
+			this.canvas.width = this.width;
+		} 
 
 		// this is the size of the main canvas viewport. it is used to render the yellow
 		// rect on the minimap. Just assume that if it exists in the options, the user
