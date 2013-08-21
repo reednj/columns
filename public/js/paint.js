@@ -224,9 +224,11 @@ var Game = new Class({
 			onOpen: function() {
 				console.log('websocket connected')
 			},
+
 			onClose: function() {
 				console.log('websocket disconnected')
 			},
+
 			onSetCell: function(cell) {
 				console.log('cell update from server: [' + cell.x + ', ' + cell.y + ', ' + cell.color +']');
 				this.grid.setCell(cell.x, cell.y, cell.color);
@@ -234,6 +236,11 @@ var Game = new Class({
 				this.mainCanvas.refresh();
 				this.mapCanvas.refresh();
 
+			}.bind(this),
+
+			onUserChange: function(userData) {
+				$('user-count').getParent('.user-info').setStyle('display', '');
+				$('user-count').innerHTML = userData.count;
 			}.bind(this)
 		});
 

@@ -1,7 +1,7 @@
 
 #
 #
-#
+# Nathan Reed (@reednj)
 class WebSocketHelper
 	def initialize(ws)
 		# the sockets list is the list of all other WebSocketHelper classes

@@ -121,10 +121,20 @@ class PaintWebSocket < WebSocketHelper
 		@db = GamesDb.connect
 	end
 
+	def on_open
+		super
+		self.send_all 'userChange', { :count => @sockets.length }
+	end
+
+	def on_close
+		super
+		self.send_others 'userChange', { :count => @sockets.length }
+	end
+
 	def on_set_cell(data)
 	
 		if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color])
-			self.send_others('setCell', data)
+			self.send_others 'setCell', data
 		end
 
 	end
