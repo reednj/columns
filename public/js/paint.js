@@ -331,6 +331,7 @@ var Game = new Class({
 				this.mainCanvas.refresh();
 			}.bind(this)
 		});
+
 	},
 
 	loadColor: function	(){

@@ -356,6 +356,9 @@ var DraggableCanvas = new Class({
 		this.options = options || {};
 		var emptyFn = function() {};
 
+		// should we use the mouse events or the touch events?
+		this.options.useTouch = this.options.useTouch === true? true : Browser.Platform.ios;
+
 		// isDragging means the button has been clicked, draggingStarted means
 		// it has actually moved. The dragstart event doesn't trigger until
 		// there is actual movement
@@ -367,14 +370,19 @@ var DraggableCanvas = new Class({
 		this.options.onDragEnd = this.options.onDragEnd || emptyFn;
 		this.options.onDragging = this.options.onDragging || emptyFn;
 
-		this.element.addEvent('mousedown', function(e) {
+		var startEventName = (this.options.useTouch)? 'touchstart' : 'mousedown';
+		var moveEventName = (this.options.useTouch)? 'touchmove' : 'mousemove';
+		var endEventName = (this.options.useTouch)? 'touchend' : 'mouseup';		
+
+		this.element.addEvent(startEventName, function(e) {
 			if(!this.isDragging) {
 				this.startPos = this.getLocalCoords(e.client.x, e.client.y);
 				this.isDragging = true;
 			}
 		}.bind(this));
 
-		this.element.addEvent('mousemove', function(e) {
+
+		this.element.addEvent(moveEventName, function(e) {
 			if(this.isDragging) {
 				if(!this.draggingStarted) {
 					this.draggingStarted = true;
@@ -382,6 +390,12 @@ var DraggableCanvas = new Class({
 				}
 
 				this.onDragging(e);
+
+				if(this.options.useTouch) {
+					// when we are dealing with the touch events, we need to disable to default, or
+					// it will cause the page to rubber band and fuck things up
+					e.preventDefault();
+				}
 			}
 		}.bind(this));
 
@@ -396,7 +410,7 @@ var DraggableCanvas = new Class({
 			}
 		}.bind(this);
 
-		this.element.addEvent('mouseup', endDrag);
+		this.element.addEvent(endEventName, endDrag);
 		this.element.addEvent('mouseout', endDrag);
 	},
 
