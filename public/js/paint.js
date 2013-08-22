@@ -1,5 +1,7 @@
+
+
 var GameOptions = {
-	squareSize: (Browser.Platform.ios) ? 15 : 20,
+	squareSize: (Browser.Platform.mobile) ? 15 : 20,
 	colors: ["#356AA0","#4096EE","#C3D9FF", '#62C8CC',
 			"#FFFF88", "#FFBECC", "#FF7400", '#FF442F',
 			"#B1FF9E", "#6BBA70", "#006E2E", 
@@ -476,8 +478,8 @@ var MiniMap = new Class({
 		this.canvas = $(this.options.canvas || 'map-canvas');
 		this.context = this.canvas.getContext('2d');
 
-		this.width = this.options.width || (Browser.Platform.ios? 100 : 200);
-		this.height = this.options.height || (Browser.Platform.ios? 50 : 100);
+		this.width = this.options.width || (Browser.Platform.mobile? 100 : 200);
+		this.height = this.options.height || (Browser.Platform.mobile? 50 : 100);
 		this.options.center = this.options.center || { gx: (this.width/2).floor(),  gy: (this.height/2).floor() };
 		this.gx = this.options.gx || this.options.center.gx - (this.width / 2).floor();
 		this.gy = this.options.gy || this.options.center.gy - (this.height / 2).floor();

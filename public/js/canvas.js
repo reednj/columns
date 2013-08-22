@@ -1,4 +1,13 @@
 
+
+if(typeof Browser.Platform.windowsphone === 'undefined') {
+	Browser.Platform.windowsphone = navigator.userAgent.toLowerCase().contains('windows phone');
+}
+
+if(typeof Browser.Platform.mobile === 'undefined') {
+	Browser.Platform.mobile = Browser.Platform.ios || Browser.Platform.android || Browser.Platform.windowsphone;
+}
+
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 // https://gist.github.com/paulirish/1579671
@@ -357,7 +366,7 @@ var DraggableCanvas = new Class({
 		var emptyFn = function() {};
 
 		// should we use the mouse events or the touch events?
-		this.options.useTouch = this.options.useTouch === true? true : Browser.Platform.ios;
+		this.options.useTouch = this.options.useTouch === true? true : (Browser.Platform.mobile || Browser.Platform.ios);
 
 		// isDragging means the button has been clicked, draggingStarted means
 		// it has actually moved. The dragstart event doesn't trigger until
