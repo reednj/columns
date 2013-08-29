@@ -31,6 +31,15 @@ Array.implement({
 	}
 });
 
+if(typeof WebSocket === 'undefined') {
+	// if websockets are not supported, then we just create
+	// a dummy one that does nothing, but gives no errors	
+	WebSocket = new Class({
+		initialize: function() {},
+		send: function() {}
+	});
+}
+
 var JSONSocket = new Class({
 	initialize: function(options) {
 		this.options = options || {};
@@ -73,7 +82,8 @@ var JSONSocket = new Class({
 	},
 
 	isConnected: function() {
-		return this.ws.readyState == WebSocket.OPEN;
+		WebSocket.OPEN = WebSocket.OPEN || 1; // turns out not all browsers define the state consts
+		return this.ws.readyState === WebSocket.OPEN;
 	}
 });
 
@@ -299,6 +309,7 @@ var Game = new Class({
 		// if we are connected to the websocket, then send the data through
 		// there, otherwise fall back to basic ajax to set the cells
 		if(this.gameSocket && this.gameSocket.isConnected()) {
+			console.log('setcell to ws [' + data.x + ', ' + data.y + ']');
 			this.gameSocket.send('setCell', data);
 		} else {
 			new Request.JSON({url: '/paint/api/cell'}).post(data);
