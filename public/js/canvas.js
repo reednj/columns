@@ -448,6 +448,121 @@ var DraggableCanvas = new Class({
 	}
 });
 
+var ScaleConverter = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.blockWidth = this.options.blockWidth || 10;
+		this.blockHeight = this.options.blockHeight || 10;
+		this.offsetX =  this.options.offsetX || 0;
+		this.offsetY =  this.options.offsetY || 0;
+		
+		if(this.options.offsetCentered === true) {
+			// this means we want the center of the 0,0 block to
+			// be 0,0 in world coords. Instead of 0,0 world being the
+			// top left corner of the 0,0 block (which is the default)
+			this.offsetX = (this.blockWidth / 2).floor()
+			this.offsetY = (this.blockHeight / 2).floor()
+		}
+	},
+	
+	blocksInRect: function(x, y, width, height) {
+		var blocks = [];
+		var start = this.worldToBlock(x, y);
+		var end = this.worldToBlock(x + width, y + height);
+
+		for(var bx=start.bx; bx <= end.bx; bx++) {
+			for(var by=start.by; by <= end.by; by++) {
+				blocks.push({
+					bx: bx, 
+					by: by, 
+					width: this.blockWidth, 
+					height: this.blockHeight 
+				});
+			}
+		}
+			
+		return blocks;
+	},
+	
+	worldToBlock: function(x, y) {
+		return {
+			bx: ((x + this.offsetX) / this.blockWidth).floor(),
+			by: ((y + this.offsetY) / this.blockHeight).floor()
+		};
+	},
+	
+	blockToWorld: function(bx, by) {
+		return {
+			x: bx * this.blockWidth - this.offsetX,
+			y: by * this.blockHeight - this.offsetY,
+			width: this.blockWidth,
+			height: this.blockHeight
+		};
+	},
+
+	blockRect: function(bx, by) {
+		return this.blockToWorld(bx, by);
+	}
+});
+
+var ImageDataHelper = new Class({
+	initialize: function(options) {
+		this.options = options || {};
+		this.context = this.options.context || null;
+		this.width = this.options.width || 0;
+		this.height = this.options.height || 0;
+		this.imageData = this.context.createImageData(this.width, this.height);
+	},
+
+	setPixel: function(x, y, color) {
+		
+		if(typeOf(color) == 'string') {
+			colorData = this.toColorArray(color);
+		} else if(typeOf(color) == 'array') {
+			colorData = color;
+		}
+
+		this.setPixelRed(x, y, colorData[0]);
+		this.setPixelGreen(x, y, colorData[1]);
+		this.setPixelBlue(x, y, colorData[2]);
+		this.setPixelAlpha(x, y, 255);
+		return this;
+	},
+
+	setPixelRed: function(x, y, colorByte) {
+		this.imageData.data[this.pixelIndex(x, y)] = colorByte;
+		return this;
+	},
+
+	setPixelGreen: function(x, y, colorByte) {
+		this.imageData.data[this.pixelIndex(x, y) + 1] = colorByte;
+		return this;
+	},
+
+	setPixelBlue: function(x, y, colorByte) {
+		this.imageData.data[this.pixelIndex(x, y) + 2] = colorByte;
+		return this;
+	},
+
+	setPixelAlpha: function(x, y, alpha) {
+		this.imageData.data[this.pixelIndex(x, y) + 3] = alpha;
+		return this;
+	},
+
+	pixelIndex: function(x, y) {
+		return (x + y * this.width) * 4;
+	},
+
+	toColorArray: function(colorString) {
+		return colorString.hexToRgb(true);
+	},
+
+	toGrayscale: function(colorArray) {
+		var tient = colorArray[0] * 0.299 + colorArray[1] * 0.587 + colorArray[2] * 0.114;
+		return [tient, tient, tient];
+	}
+});
+
 Array.implement({
 	sum: function() {
 		var sum = 0;
