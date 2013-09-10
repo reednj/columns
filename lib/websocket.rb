@@ -39,7 +39,7 @@ class WebSocketHelper
 	end
 
 	# send a message in to the current client
-	def send(event, data)
+	def send(event, data = {})
 		@ws.send({:event => event, :data => data}.to_json)
 	end
 	

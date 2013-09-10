@@ -87,6 +87,10 @@ get '/paint/api/map' do
 end
 
 post '/paint/api/cell' do
+	if !UsernameHelper.valid?(params[:username], params[:password])
+		return 401
+	end
+
 	GamesDb.connect do |db|
 		db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
 	end
@@ -147,11 +151,24 @@ class PaintWebSocket < WebSocketHelper
 		self.send_others 'userChange', { :count => @sockets.length }
 	end
 
-	def on_set_cell(data)
-	
-		if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color])
-			self.send_others 'setCell', data
+	def on_validate_user(data)
+		if UsernameHelper.valid?(data[:username], data[:password])
+			@username = data[:username]
+			self.send 'userValidated'
+		else
+			self.send 'validateFailed', {:type=> 'PasswordError', :description => 'Bad username or password'}
 		end
+	end
+
+	def on_set_cell(data)
+		if @username == nil
+			self.send 'clientError', {:type=> 'Unauthorized', :description => 'user not validated'}
+		else
+			if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color])
+				self.send_others 'setCell', data
+			end
+		end
+
 
 	end
 
