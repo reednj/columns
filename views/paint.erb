@@ -23,7 +23,11 @@
 		var _password = <%= password.to_json %>;
 
 		window.addEvent('load', function() {
-			var g = new Game({debug: _debug});
+			var g = new Game({
+				debug: _debug,
+				username: _username,
+				password: _password
+			});
 		});
 	</script>
 

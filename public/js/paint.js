@@ -69,6 +69,8 @@ var Game = new Class({
 	initialize: function(options) {
 		this.options = options || {};
 		this.options.debug = this.options.debug === true? true : false;
+		this.options.username = this.options.username || null;
+		this.options.password = this.options.password || null;
 
 		this.mainCanvas = new CanvasHelper('main-canvas', {autoRedraw: false});
 		this.mapCanvas = new CanvasHelper('map-canvas', {autoRedraw: false});
@@ -141,12 +143,13 @@ var Game = new Class({
 		this.gameSocket = new JSONSocket({
 			url: 'ws://' + document.location.hostname + ':' + (document.location.port || '80') + '/paint/api/ws',
 			onOpen: function() {
-				console.log('websocket connected')
-			},
+				console.log('websocket connected');
+				this.gameSocket.send('validateUser', { username: this.options.username, password: this.options.password });
+			}.bind(this),
 
 			onClose: function() {
-				console.log('websocket disconnected')
-			},
+				console.log('websocket disconnected');
+			}.bind(this),
 
 			onSetCell: function(cell) {
 				console.log('cell update from server: [' + cell.x + ', ' + cell.y + ', ' + cell.color +']');
@@ -205,7 +208,11 @@ var Game = new Class({
 	},
 
 	setCell: function(gx, gy, color) {
-		var data = {x: gx, y: gy, color: color};
+		var data = {
+			x: gx, 
+			y: gy, 
+			color: color
+		};
 
 		this.minimap.setCell(gx, gy, color);
 
@@ -215,7 +222,10 @@ var Game = new Class({
 			console.log('setcell to ws [' + data.x + ', ' + data.y + ']');
 			this.gameSocket.send('setCell', data);
 		} else {
-			new Request.JSON({url: '/paint/api/cell'}).post(data);
+			new Request.JSON({url: '/paint/api/cell'}).post(Object.merge(data, {
+				username: this.options.username, 
+				password: this.options.password
+			}));
 		}
 	},
 
