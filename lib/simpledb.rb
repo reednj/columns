@@ -27,12 +27,13 @@ class DbExtensions
 		@db = db
 	end
 
-	def set_cell(x, y, color)
+	def set_cell(x, y, color, username = nil)
 		if @db[:cell].where(:x => x, :y => y).count == 0
 			@db[:cell].insert(
 				:x => x,
 				:y => y,
-				:color => color
+				:color => color,
+				:username => username
 			)
 
 			return true

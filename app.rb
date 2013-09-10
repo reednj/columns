@@ -92,7 +92,7 @@ post '/paint/api/cell' do
 	end
 
 	GamesDb.connect do |db|
-		db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color])
+		db.ext.set_cell(params[:x].to_i, params[:y].to_i, params[:color], params[:username])
 	end
 
 	return 200
@@ -164,7 +164,7 @@ class PaintWebSocket < WebSocketHelper
 		if @username == nil
 			self.send 'clientError', {:type=> 'Unauthorized', :description => 'user not validated'}
 		else
-			if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color])
+			if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color], @username)
 				self.send_others 'setCell', data
 			end
 		end
