@@ -74,10 +74,41 @@ var Game = new Class({
 		this.mapCanvas = new CanvasHelper('map-canvas', {autoRedraw: false});
 		this.canvas = this.mainCanvas.canvas;
 		this.squareSize = GameOptions.squareSize || 20;
-		
 
 		this.setCanvasSize();
+		this.initGrid();
 
+		this.initPalette();
+		this.initEvents();
+		this.initMap();
+		this.initSocket();
+
+		this.grid.loadInitialData();
+
+		this.mapCanvas.refresh();
+		this.mainCanvas.refresh();
+
+	},
+
+	initPalette: function() {
+		// set up the color picker
+		var p = new PalettePicker('picker', {
+			colors: GameOptions.colors,
+			initialColor: this.loadColor(),
+			previewElement: 'picker-preview',
+			onSelect: function(color) {
+				if(this.grid) {
+					this.grid.setColor(color);
+					this.saveColor(color);
+				}
+			}.bind(this)
+		});
+
+		return p;
+
+	},
+
+	initGrid: function() {
 		// configure the main grid
 		this.grid = new CanvasGrid({
 			debug: this.options.debug,
@@ -100,33 +131,12 @@ var Game = new Class({
 			}.bind(this)
 		});
 
-		// set up the color picker
-		var p = new PalettePicker('picker', {
-			colors: GameOptions.colors,
-			initialColor: this.loadColor(),
-			previewElement: 'picker-preview',
-			onSelect: function(color) {
-				if(this.grid) {
-					this.grid.setColor(color);
-					this.saveColor(color);
-				}
-			}.bind(this)
-		});
-
-		this.initEvents();
-
-		this.minimap = new MiniMap({
-			center: this.grid.getCenter(),
-			viewportSize: {width: this.grid.columns, height: this.grid.rows},
-			onImageLoad: function() {
-				this.mapCanvas.refresh();
-			}.bind(this)
-		});
-		this.mapCanvas.add(this.minimap);
 		this.mainCanvas.add(this.grid);
+		return this.grid;
 
-		this.grid.loadInitialData();
+	},
 
+	initSocket: function() {
 		// connect to the game server with a websocket
 		this.gameSocket = new JSONSocket({
 			url: 'ws://' + document.location.hostname + ':' + (document.location.port || '80') + '/paint/api/ws',
@@ -153,9 +163,7 @@ var Game = new Class({
 			}.bind(this)
 		});
 
-		this.mapCanvas.refresh();
-		this.mainCanvas.refresh();
-
+		return this.gameSocket;
 	},
 
 	setCanvasSize: function(width, height) {
@@ -209,6 +217,18 @@ var Game = new Class({
 		} else {
 			new Request.JSON({url: '/paint/api/cell'}).post(data);
 		}
+	},
+
+	initMap: function() {
+		this.minimap = new MiniMap({
+			center: this.grid.getCenter(),
+			viewportSize: {width: this.grid.columns, height: this.grid.rows},
+			onImageLoad: function() {
+				this.mapCanvas.refresh();
+			}.bind(this)
+		});
+
+		this.mapCanvas.add(this.minimap);
 	},
 
 	initEvents: function() {
