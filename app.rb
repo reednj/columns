@@ -37,7 +37,23 @@ get '/test/timer' do
 end
 
 get '/paint' do
-	erb :paint
+
+	account = request.cookies['account_info']
+	account = JSON.parse(account, {:symbolize_names => true}) if account != nil
+
+	if account == nil
+		account = UsernameHelper.create_account 
+		response.set_cookie("account_info", 
+			:value => account.to_json,
+			:path => '/paint',
+			:expires => Time.gm(2015, 1, 1)
+		)
+	end
+
+	erb :paint, :locals => {
+		:username => account[:username], 
+		:password => account[:password]
+	}
 end
 
 get '/paint/api/ws' do
@@ -140,3 +156,48 @@ class PaintWebSocket < WebSocketHelper
 	end
 
 end
+
+class UsernameHelper
+	def self.generate_username
+		String.rand
+	end
+
+	def self.generate_password(username)
+		"#{username}.xIA4Ge56MQ.paint.popacular.com".sha1
+	end
+
+	def self.valid?(username, password)
+		generate_password(username) == password
+	end
+
+	def self.create_account
+		username = generate_username
+		password = generate_password username
+
+		return {
+			:username => username, 
+			:password => password
+		}
+	end
+
+end
+
+require 'digest/sha1'
+
+class String
+	def self.rand(len = 8)
+		d = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+		return (0..len).to_a.map { d.rand }.join ''
+	end
+
+	def sha1
+		Digest::SHA1.hexdigest self
+	end
+end
+
+class Array
+	def rand
+		self[Object.send(:rand, self.length)]
+	end
+end
+

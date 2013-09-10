@@ -19,6 +19,9 @@
 
 	<script type='text/javascript'>
 		var _debug = <%= settings.development?.to_json %>;
+		var _username = <%= username.to_json %>;
+		var _password = <%= password.to_json %>;
+
 		window.addEvent('load', function() {
 			var g = new Game({debug: _debug});
 		});
