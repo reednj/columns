@@ -104,7 +104,7 @@ post '/paint/api/undo' do
 	end
 
 	GamesDb.connect do |db|
-		db.ext.delete_last(params[:username])
+		db.ext.delete_last params[:username]
 	end
 
 	return 200
@@ -174,14 +174,26 @@ class PaintWebSocket < WebSocketHelper
 
 	def on_set_cell(data)
 		if @username == nil
-			self.send 'clientError', {:type=> 'Unauthorized', :description => 'user not validated'}
-		else
-			if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color], @username)
-				self.send_others 'setCell', data
-			end
+			self.send_unauthorized_error
+			return
 		end
 
+		if @db.ext.set_cell(data[:x].to_i, data[:y].to_i, data[:color], @username)
+			self.send_others 'setCell', data
+		end
+	end
 
+	def on_undo_last(data)
+		if @username == nil
+			self.send_unauthorized_error
+			return
+		end
+
+		@db.ext.delete_last @username
+	end
+
+	def send_unauthorized_error
+		self.send 'clientError', {:type=> 'Unauthorized', :description => 'user not validated'}
 	end
 
 end

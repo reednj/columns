@@ -76,6 +76,7 @@ var Game = new Class({
 		this.mapCanvas = new CanvasHelper('map-canvas', {autoRedraw: false});
 		this.canvas = this.mainCanvas.canvas;
 		this.squareSize = GameOptions.squareSize || 20;
+		this.lastCell = null;
 
 		this.setCanvasSize();
 		this.initGrid();
@@ -214,6 +215,7 @@ var Game = new Class({
 			color: color
 		};
 
+		this.lastCell = data;
 		this.minimap.setCell(gx, gy, color);
 
 		// if we are connected to the websocket, then send the data through
@@ -227,6 +229,25 @@ var Game = new Class({
 				password: this.options.password
 			}));
 		}
+	},
+
+	undoLast: function() {
+		if(this.lastCell) {
+			this.resetCell(this.lastCell.x, this.lastCell.y);
+
+			if(this.gameSocket && this.gameSocket.isConnected()) {
+				this.gameSocket.send('undoLast', {});
+			} else {
+				new Request.JSON({url: '/paint/api/undo'}).post({username: this.options.username, password: this.options.password });
+			}
+
+			this.lastCell = null;
+		}
+	},
+
+	resetCell: function(gx, gy) {
+		this.grid.resetCell(gx, gy);
+		this.mainCanvas.refresh();
 	},
 
 	initMap: function() {
@@ -272,6 +293,9 @@ var Game = new Class({
 				this.mainCanvas.refresh();
 			}.bind(this)
 		});
+
+		// link the undo button in
+		$('undo-link').addEvent('click', this.undoLast.bind(this));
 
 	},
 
@@ -535,6 +559,10 @@ var CanvasGrid = new Class({
 		if(withEvents === true) {
 			this.options.onCellSet(gx, gy, color);
 		}
+	},
+
+	resetCell: function(gx, gy) {
+		delete this.data[this.getCellID(gx, gy)];
 	},
 
 	getCellID: function(gx, gy) {
