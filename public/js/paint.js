@@ -243,6 +243,7 @@ var Game = new Class({
 
 	initEvents: function() {
 		this.dg = new DraggableCanvas(this.canvas, {
+			rightClickOnly: false,
 
 			onDragStart: function() {
 				this.grid.isDragging = true;

@@ -363,11 +363,16 @@ var DraggableCanvas = new Class({
 	initialize: function(element, options) {
 		this.element = $(element);
 		this.options = options || {};
+		
+
 		var emptyFn = function() {};
 
 		// should we use the mouse events or the touch events?
 		this.options.useTouch = this.options.useTouch === true? true : (Browser.Platform.mobile || Browser.Platform.ios);
 
+		// only detect dragging with the right mouse button
+		this.options.rightClickOnly = (this.options.rightClickOnly === true)? true : false;
+		
 		// isDragging means the button has been clicked, draggingStarted means
 		// it has actually moved. The dragstart event doesn't trigger until
 		// there is actual movement
@@ -381,10 +386,20 @@ var DraggableCanvas = new Class({
 
 		var startEventName = (this.options.useTouch)? 'touchstart' : 'mousedown';
 		var moveEventName = (this.options.useTouch)? 'touchmove' : 'mousemove';
-		var endEventName = (this.options.useTouch)? 'touchend' : 'mouseup';		
+		var endEventName = (this.options.useTouch)? 'touchend' : 'mouseup';
+
+		if(this.options.rightClickOnly === true) {
+			window.addEvent('contextmenu', function(e) {
+				return false;
+			});
+		}
 
 		this.element.addEvent(startEventName, function(e) {
 			if(!this.isDragging) {
+				if(this.options.rightClickOnly === true && !e.rightClick) {
+					return false;
+				}
+
 				this.startPos = this.getLocalCoords(e.client.x, e.client.y);
 				this.isDragging = true;
 			}
