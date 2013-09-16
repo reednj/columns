@@ -18,6 +18,11 @@ if(typeof WebSocket === 'undefined') {
 	});
 }
 
+Element.implement({
+   show: function() {this.setStyle('display','');},
+   hide: function() {this.setStyle('display','none');}
+});
+
 var JSONSocket = new Class({
 	initialize: function(options) {
 		this.options = options || {};
@@ -229,6 +234,8 @@ var Game = new Class({
 				password: this.options.password
 			}));
 		}
+
+		$('undo-link').show();
 	},
 
 	undoLast: function() {
@@ -241,6 +248,8 @@ var Game = new Class({
 				new Request.JSON({url: '/paint/api/undo'}).post({username: this.options.username, password: this.options.password });
 			}
 
+
+			$('undo-link').hide();
 			this.lastCell = null;
 		}
 	},
