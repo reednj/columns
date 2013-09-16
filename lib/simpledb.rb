@@ -41,6 +41,13 @@ class DbExtensions
 			return false
 		end
 	end
+
+	# removes the last action for that particular user
+	# this function assumes that the user is already validated in terms of un/pw
+	def delete_last(username)
+		puts @db[:cell].where(:username => username).reverse_order(:created_date).limit(1).delete
+	end
+
 end
 
 class GitVersion

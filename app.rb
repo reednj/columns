@@ -98,6 +98,18 @@ post '/paint/api/cell' do
 	return 200
 end
 
+post '/paint/api/undo' do
+	if !UsernameHelper.valid?(params[:username], params[:password])
+		return 401
+	end
+
+	GamesDb.connect do |db|
+		db.ext.delete_last(params[:username])
+	end
+
+	return 200
+end
+
 get '/paint/api/cell' do
 	content_type 'application/json'
 
