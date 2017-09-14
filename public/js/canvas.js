@@ -1,12 +1,10 @@
 
 
-if(typeof Browser.Platform.windowsphone === 'undefined') {
-	Browser.Platform.windowsphone = navigator.userAgent.toLowerCase().contains('windows phone');
-}
+Browser.Platform.windowsphone = Browser.Platform.windowsphone || navigator.userAgent.toLowerCase().contains('windows phone');
+Browser.Platform.ipad = Browser.Platform.ipad || navigator.userAgent.toLowerCase().contains('ipad');
+Browser.Platform.touch = Browser.Platform.touch || (Browser.Platform.ios || Browser.Platform.android || Browser.Platform.windowsphone === true);
+Browser.Platform.mobile = Browser.Platform.mobile || (Browser.Platform.touch && !Browser.Platform.ipad);
 
-if(typeof Browser.Platform.mobile === 'undefined') {
-	Browser.Platform.mobile = Browser.Platform.ios || Browser.Platform.android || Browser.Platform.windowsphone;
-}
 
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
@@ -368,7 +366,7 @@ var DraggableCanvas = new Class({
 		var emptyFn = function() {};
 
 		// should we use the mouse events or the touch events?
-		this.options.useTouch = this.options.useTouch === true? true : (Browser.Platform.mobile || Browser.Platform.ios);
+		this.options.useTouch = this.options.useTouch === true? true : (Browser.Platform.touch || Browser.Platform.ios);
 
 		// only detect dragging with the right mouse button
 		this.options.rightClickOnly = (this.options.rightClickOnly === true)? true : false;
