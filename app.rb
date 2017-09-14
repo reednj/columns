@@ -16,7 +16,3 @@ end
 get '/columns' do
 	erb :columns
 end
-
-get '/wall' do
-	erb :wall
-end
