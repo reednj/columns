@@ -16,10 +16,10 @@ get '/' do
 end
 
 get '/game/id' do
-	GameModel.start.game_id
+	json({ :id => GameModel.start.game_id })
 end
 
-get '/game/incr/:id/:n' do |game_id, n|
+post '/game/incr/:id/:n' do |game_id, n|
 	GameModel[game_id].incr(n)
 	"ok"
 end

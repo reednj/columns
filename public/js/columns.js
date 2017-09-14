@@ -13,6 +13,7 @@ var GameState = {
 var ColumnsGame = new Class({
 	initialize: function() {
 		this.gameState = GameState.start;
+		this.gameId = null;
 
 		this.mainCanvas = new CanvasHelper('main-canvas', {onRedraw: this.update.bind(this) });
 		this.backCanvas = new CanvasHelper('back-canvas', {autoRedraw: false });
@@ -222,6 +223,11 @@ var ColumnsGame = new Class({
 			this.resetBoard();
 		}
 
+		new Request.JSON({
+			url:'/game/id', 
+			onSuccess: function(response) { this.gameId = response.id }.bind(this)
+		}).get();
+
 		this.start();
 	},
 
@@ -293,12 +299,19 @@ var ColumnsGame = new Class({
 
 	addPoints: function(blocksRemoved) {
 		var blocksPerLevel = 50;
+		var pointsChange = blocksRemoved * this.level;
 		this.blocksRemoved += blocksRemoved;
-		this.points += (blocksRemoved * this.level);
+		this.points += pointsChange
 		$('points').innerHTML = this.points;
 
 		if(blocksPerLevel * this.level < this.blocksRemoved) {
 			this.levelUp();
+		}
+
+		if(this.gameId) {
+			new Request.JSON({
+				url:'/game/incr/'+ this.gameId +'/' + pointsChange
+			}).post();
 		}
 	},
 
