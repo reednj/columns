@@ -11,7 +11,7 @@ configure :development do
 end
 
 use Rack::Deflater
-set :version, '1.0'
+set :version, `git describe`
 
 get '/' do
 	erb :columns
