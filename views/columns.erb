@@ -83,12 +83,36 @@
 		</div>
 
 		<div class='me'>
-			<div>Nathan Reed | <a href='http://reednj.com'>@reednj</a></div>
-			<div><a href='https://github.com/reednj/columns'><%= settings.version %></a></div>
+			<div>
+			<a class="twitter-follow-button" href="https://twitter.com/reednj">Follow @reednj</a>
+			<a class="twitter-share-button" href="https://twitter.com/intent/tweet?text=blipblop%20is%20a%20teris%20like%20puzzle%20game%20where%20you%20try%20to%20match%20the%20colors">Tweet</a>
+			</div>
+			
+			<div>
+			<a href='http://reednj.com'>@reednj</a> | 
+			<a href='https://github.com/reednj/columns'><%= settings.version %></a>
+			</div>
 		</div>
 
 	</div>
 </div>
+
+<script>window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));</script>
 </body>
 
 </html>
