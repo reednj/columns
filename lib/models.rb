@@ -10,7 +10,7 @@ class GameModel
 	end
 
 	def self.top(n=10)
-        data = REDIS.zrevrange "columns:games:score", 0, 9, :with_scores => true
+        data = REDIS.zrevrange "columns:games:score", 0, n-1, :with_scores => true
         data.map do |a| 
             game = self.new a[0]
             game.score = a[1]
