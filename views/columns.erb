@@ -55,6 +55,11 @@
 				<div><i>up/down</i> rotate</div>
 				<div><i>space</i> drop quickly</div>
 			</div>
+
+			<div class='help scores'>
+				<h2>Top Scores</h2>
+				<%= erb :_top_games, :locals => { :scores => GameModel.top } %>
+			</div>
 		</div>
 
 		<div style='clear:both'></div>

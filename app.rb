@@ -6,6 +6,10 @@ require 'redis'
 
 Dir["./lib/**/*.rb"].each {|f| require f }
 
+configure :development do 
+	Dir["./lib/**/*.rb"].each {|f| also_reload f  }
+end
+
 use Rack::Deflater
 set :version, '1.0'
 
@@ -15,6 +19,12 @@ end
 
 get '/game/id' do
 	json({ :id => GameModel.start.game_id })
+end
+
+get '/game/top' do
+	erb :_top_games, :locals => {
+		:scores => GameModel.top
+	}
 end
 
 post '/game/incr/:id/:n' do |game_id, n|
