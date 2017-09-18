@@ -58,7 +58,7 @@
 
 			<div class='help scores'>
 				<h2>Top Scores</h2>
-				<%= erb :_top_games, :locals => { :scores => GameModel.top 8 } %>
+				<%= erb :_top_games, :locals => { :scores => GameModel.top(8) } %>
 			</div>
 		</div>
 
