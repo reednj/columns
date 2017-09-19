@@ -326,7 +326,7 @@ var ColumnsGame = new Class({
 	},
 
 	blockSpeed: function() {
-		var maxSpeed = 4.0;
+		var maxSpeed = 3.0;
 		return (0.5 + this.level * 0.25).limit(1.0, maxSpeed);
 	}
 
